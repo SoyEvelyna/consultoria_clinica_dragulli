@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gulli Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,900&display=swap" rel="stylesheet">
+</head>
+<body>
+<style>
+:root{
+  --paper:#FAFAFA; --card:#FFFFFF; --ink:#212121; --chrome:#FEF200; --hazard:#F03E24;
+  --signal:#50E661; --sky:#6BB1BD; --muted:#6B6B6B; --rule:#DCDCDC;
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --switzer:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --micro:11px; --tracking-micro:.12em; --tracking-display:-.03em;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{color-scheme:light}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; min-height:100vh;
+}
+img{display:block;max-width:100%}
+button,select,input,textarea{font-family:inherit;color:inherit}
+.cond{font-weight:900;text-transform:uppercase;font-stretch:condensed;letter-spacing:var(--tracking-display);line-height:.9}
+.sw{font-family:var(--switzer);font-weight:700}
+.micro{font-size:var(--micro);letter-spacing:var(--tracking-micro);text-transform:uppercase;font-weight:600}
+.mono-num{font-variant-numeric:tabular-nums}
+a{color:inherit}
+
+/* ===== APP SHELL ===== */
+#app{max-width:1240px;margin:0 auto;padding:20px 24px 80px}
+@media (max-width:720px){ #app{padding:14px 14px 60px} }
+
+/* ===== PORTADA =====
+   Medidas tomadas del diseño de Canva (3000×358). Las unidades cqw escalan
+   todo en proporción al ancho de la portada. */
+.cover{margin-bottom:10px}
+.cover-art{
+  position:relative;container-type:inline-size;aspect-ratio:3000/358;
+  background:#7EE78A;color:var(--ink);overflow:hidden;
+}
+.cover-dog{position:absolute;left:0;bottom:0;width:18.667cqw;height:auto;display:block}
+.cover-title{position:absolute;left:17.066cqw;top:3.22cqw;margin:0;font-family:"Archivo",var(--sans);font-stretch:75%;font-size:5.184cqw;font-weight:900;line-height:.8;letter-spacing:-.006em;white-space:nowrap}
+.cover-sub{position:absolute;left:17.196cqw;top:7.492cqw;font-size:2cqw;font-weight:400;line-height:1;white-space:nowrap}
+.cover-logo{position:absolute;right:3.833cqw;top:4.2cqw;width:12.467cqw}
+.cover-logo svg{display:block;width:100%;height:auto}
+@media (max-width:640px){
+  .cover-art{aspect-ratio:auto;min-height:104px;padding:36px 14px 14px 132px}
+  .cover-dog{width:auto;height:92px}
+  .cover-title,.cover-sub{position:relative;left:auto;top:auto;display:block;white-space:normal}
+  .cover-title{font-size:28px;line-height:.9}
+  .cover-sub{font-size:13px;margin-top:5px}
+  .cover-logo{right:14px;top:12px;width:70px}
+}
+.cover-meta{display:flex;justify-content:flex-end;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.sync-chip{display:flex;align-items:center;gap:7px;font-size:var(--micro);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sync-dot.-on{background:var(--signal)}
+.sync-dot.-local{background:var(--chrome)}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:28px;overflow-x:auto}
+.tab-btn{
+  appearance:none;border:none;background:none;cursor:pointer;
+  font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  padding:14px 18px 12px;border-bottom:4px solid transparent;color:var(--muted);white-space:nowrap;
+}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.-active{color:var(--ink);border-bottom-color:var(--signal)}
+.tab-btn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* ===== SECTION HEADINGS ===== */
+.view-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.view-head h2{font-size:clamp(26px,4vw,40px)}
+.view-head .sub{color:var(--muted);font-size:15px;max-width:56ch;margin-top:6px}
+
+/* ===== KPI GRID ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:var(--ink);border:2px solid var(--ink);margin-bottom:28px}
+.kpi{background:var(--card);padding:18px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.kpi.-accent{background:var(--signal)}
+.kpi.-warn{background:var(--hazard);color:var(--paper)}
+.kpi .num{font-family:var(--sans);font-weight:900;font-stretch:condensed;font-size:clamp(28px,3.4vw,44px);line-height:1}
+.kpi .lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.kpi.-accent .lbl,.kpi.-warn .lbl{color:inherit;opacity:.82}
+@media (max-width:920px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== ESTADO GENERAL BANNER ===== */
+.status-banner{
+  display:flex;align-items:center;gap:14px;border:2px solid var(--ink);padding:16px 20px;margin-bottom:28px;background:var(--card);
+}
+.status-banner .dot{width:14px;height:14px;flex:none;background:var(--signal)}
+.status-banner.-warn .dot{background:var(--chrome)}
+.status-banner.-risk .dot{background:var(--hazard)}
+.status-banner .txt b{font-size:15px;text-transform:uppercase;letter-spacing:.02em}
+.status-banner .txt span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+
+/* ===== FASE PROGRESS ROW ===== */
+.fase-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
+@media (max-width:820px){.fase-row{grid-template-columns:repeat(2,1fr)}}
+.fase-card{border:2px solid var(--ink);padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--card)}
+.fase-card .flabel{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.25;min-height:2.4em}
+.fase-card .fsub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.fase-bar{height:10px;background:var(--paper);border:1.5px solid var(--ink);position:relative;overflow:hidden}
+.fase-bar i{display:block;height:100%;background:var(--signal)}
+.fase-nums{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:600}
+.fase-nums b{color:var(--ink)}
+
+/* ===== OBJETIVO / PRIORIDADES BLOCK ===== */
+.strategy-block{border:2px solid var(--ink);margin-bottom:32px;background:var(--card)}
+.strategy-block .obj-head{padding:22px 24px;border-bottom:2px solid var(--ink);background:var(--chrome)}
+.strategy-block .obj-head .micro{color:var(--ink);opacity:.7}
+.strategy-block .obj-head p{font-size:17px;line-height:1.4;max-width:80ch;margin-top:8px;font-weight:500}
+.prio-list{display:grid;grid-template-columns:repeat(3,1fr)}
+@media (max-width:820px){.prio-list{grid-template-columns:1fr}}
+.prio-item{padding:20px 22px;border-right:2px solid var(--ink)}
+.prio-item:last-child{border-right:none}
+@media (max-width:820px){.prio-item{border-right:none;border-bottom:2px solid var(--ink)}.prio-item:last-child{border-bottom:none}}
+.prio-item .n{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em}
+.prio-item h4{font-size:16px;text-transform:uppercase;margin:6px 0 8px;letter-spacing:-.01em}
+.prio-item p{font-size:13.5px;line-height:1.5;color:var(--muted)}
+
+/* ===== FILTER BAR ===== */
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px;padding:14px;border:2px solid var(--ink);background:var(--card)}
+.filter-bar .fgroup{display:flex;flex-direction:column;gap:4px}
+.filter-bar label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.filter-bar select{
+  border:2px solid var(--ink);background:var(--paper);padding:8px 30px 8px 10px;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.03em;font-weight:600;appearance:none;cursor:pointer;min-width:150px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23212121'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center;
+}
+.filter-bar select:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.filter-clear{
+  margin-left:auto;background:none;border:2px solid transparent;text-decoration:underline;
+  font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;cursor:pointer;padding:8px 4px;color:var(--muted);
+}
+.filter-clear:hover{color:var(--hazard)}
+.result-count{font-size:12px;color:var(--muted);margin-bottom:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+
+/* ===== FASE GROUP HEADER (plan view) ===== */
+.group-head{
+  display:flex;align-items:center;gap:12px;margin:30px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--ink);
+}
+.group-head:first-child{margin-top:0}
+.group-head h3{font-size:19px;text-transform:uppercase;letter-spacing:-.01em}
+.group-head .count{font-size:12px;color:var(--muted);font-weight:700}
+.group-head .swatch{width:14px;height:14px;flex:none;background:var(--signal)}
+
+/* ===== TASK LIST ===== */
+.task-list{display:flex;flex-direction:column;border-top:2px solid var(--ink)}
+.task-row{
+  display:grid;grid-template-columns:.8fr .95fr 1.9fr 96px 112px 150px 1.25fr 34px;gap:14px;align-items:center;
+  padding:13px 4px;border-bottom:1.5px solid var(--rule);
+}
+.task-row:hover{background:rgba(33,33,33,.03)}
+.task-row.-editable{cursor:pointer}
+.task-row.-overdue{background:rgba(240,62,36,.06)}
+@media (max-width:980px){
+  .task-row{grid-template-columns:1fr;gap:8px;padding:14px 4px}
+  .task-row .col-dates,.task-row .col-resp{justify-self:start}
+}
+.tk-tema{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:3px}
+.tk-tarea{font-size:14.5px;line-height:1.35;font-weight:500}
+.tk-flags{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle}
+.flag{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1.5px solid var(--hazard);color:var(--hazard)}
+.resp-chip{
+  width:30px;height:30px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;
+  font-size:10.5px;font-weight:800;background:var(--card);flex:none;
+}
+.col-resp{display:flex;align-items:center;gap:8px}
+.col-resp .rname{font-size:11.5px;color:var(--muted);font-weight:600}
+.col-dates{font-size:11.5px;color:var(--muted);line-height:1.5;font-weight:500}
+.tk-resp{font-size:13px;font-weight:600}
+.tk-obs{font-size:12px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.col-dates b{color:var(--ink);font-weight:700}
+.urg-dot{width:9px;height:9px;flex:none;background:var(--muted);margin-right:6px;display:inline-block}
+.urg-Alta{background:var(--hazard)}
+.urg-Media{background:var(--chrome)}
+.urg-Baja{background:var(--rule)}
+.status-select{
+  border:2px solid var(--ink);padding:7px 24px 7px 10px;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.03em;appearance:none;cursor:pointer;width:100%;
+  background-repeat:no-repeat;background-position:right 8px center;background-size:9px 6px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23212121'/></svg>");
+}
+/* Estados: Pendiente rojo · En proceso amarillo · Seguimiento celeste · En testeo violeta · Finalizada verde */
+.st-Por-hacer{background:#E5484D;color:#fff;border-color:#B9282D}
+.st-En-proceso{background:#F5C518;color:#212121;border-color:#C89E00}
+.st-Seguimiento{background:#8FD3F4;color:#212121;border-color:#4BA9D6}
+.st-En-testeo{background:#9B6BDF;color:#fff;border-color:#7447B8}
+.st-Completado{background:#3DBE6A;color:#fff;border-color:#23914A}
+/* Selector de tablero (Administración · Médicos · Comercial) */
+.tablero-bar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.tablero-btn{
+  border:2px solid var(--ink);background:var(--card);padding:9px 16px;cursor:pointer;
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+}
+.tablero-btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tablero-btn .n{font-weight:600;opacity:.7;margin-left:8px}
+.obs-btn{
+  width:30px;height:30px;border:2px solid var(--ink);background:var(--card);cursor:pointer;
+  display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;
+}
+.obs-btn:hover{background:var(--ink);color:var(--paper)}
+.obs-btn[disabled]{opacity:.25;cursor:default}
+.obs-btn[disabled]:hover{background:var(--card);color:var(--ink)}
+.empty-note{padding:36px 8px;text-align:center;color:var(--muted);font-size:14px;border-bottom:1.5px solid var(--rule)}
+
+/* ===== TIMELINE ===== */
+.tl-month{margin-bottom:8px}
+.tl-month-head{
+  position:sticky;top:0;background:var(--paper);z-index:1;
+  font-size:13px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;
+  padding:10px 0;border-bottom:2px solid var(--ink);margin-bottom:2px;
+}
+.tl-item{display:flex;gap:16px;padding:12px 0;border-bottom:1.5px solid var(--rule)}
+.tl-date{width:66px;flex:none;font-size:12px;font-weight:800;color:var(--muted);padding-top:2px}
+.tl-node{width:12px;flex:none;display:flex;justify-content:center;padding-top:5px}
+.tl-node i{width:12px;height:12px;background:var(--ink);display:block}
+.tl-node i.-done{background:var(--signal)}
+.tl-node i.-overdue{background:var(--hazard)}
+.tl-body{flex:1;min-width:0}
+.tl-body .tt{font-size:14.5px;font-weight:600;line-height:1.35}
+.tl-body .tm{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+/* ===== PENDIENTES ===== */
+.pend-section{margin-bottom:34px}
+.pend-section h3{font-size:18px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.pend-section h3 .tag-count{background:var(--ink);color:var(--paper);font-size:12px;padding:2px 9px;font-weight:700}
+.pend-card{border:2px solid var(--ink);padding:14px 16px;margin-bottom:10px;background:var(--card);display:flex;gap:14px;align-items:flex-start}
+.pend-card.-hazard{border-color:var(--hazard)}
+.pend-card .body{flex:1;min-width:0}
+.pend-card .tt{font-size:14px;font-weight:600;line-height:1.35}
+.pend-card .mt{font-size:11.5px;color:var(--muted);margin-top:5px}
+.backlog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.backlog-item{border:1.5px dashed var(--ink);padding:12px 14px;font-size:13px;line-height:1.4}
+.backlog-item .bl-area{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:4px}
+.backlog-item .bl-fase{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;border:1.5px solid var(--rule);padding:1px 6px;color:var(--muted)}
+
+/* ===== ENTREGABLES ===== */
+.deliv-grid{display:flex;flex-direction:column;border-top:2px solid var(--ink)}
+.deliv-row{display:grid;grid-template-columns:26px 1.4fr 1.6fr 130px 120px;gap:14px;align-items:center;padding:13px 4px;border-bottom:1.5px solid var(--rule)}
+@media (max-width:900px){.deliv-row{grid-template-columns:1fr}}
+.deliv-icon{width:26px;height:26px;background:var(--ink);color:var(--chrome);display:grid;place-items:center;font-size:12px;font-weight:800}
+.deliv-name{font-size:14px;font-weight:600;line-height:1.35}
+.deliv-task{font-size:12.5px;color:var(--muted);line-height:1.4}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:1.5px solid var(--ink);padding:4px 9px;width:fit-content}
+
+/* ===== NOTAS ===== */
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media (max-width:900px){.notes-grid{grid-template-columns:1fr}}
+.note-compose{border:2px solid var(--ink);padding:16px;background:var(--card);margin-bottom:18px}
+.note-compose textarea{
+  width:100%;border:2px solid var(--ink);padding:10px;font-size:14px;font-family:inherit;resize:vertical;min-height:70px;background:var(--paper);
+}
+.note-compose .row{display:flex;gap:10px;margin-top:10px;align-items:center}
+.note-compose select{border:2px solid var(--ink);padding:8px;font-size:12px;text-transform:uppercase;font-weight:700;background:var(--paper)}
+.btn-primary{
+  background:var(--ink);color:var(--chrome);border:2px solid var(--ink);padding:10px 20px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;font-size:12.5px;cursor:pointer;
+}
+.btn-primary:hover{background:var(--hazard);border-color:var(--hazard);color:var(--paper)}
+.btn-primary:disabled{opacity:.4;cursor:default;background:var(--muted);border-color:var(--muted)}
+.note-item{border-left:4px solid var(--ink);padding:10px 0 10px 14px;margin-bottom:14px}
+.note-item .who{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.note-item .when{font-weight:500;text-transform:none;letter-spacing:0}
+.note-item p{font-size:14px;line-height:1.5;margin-top:4px}
+
+/* ===== MODAL ===== */
+.modal-backdrop{position:fixed;inset:0;background:rgba(33,33,33,.82);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop[hidden]{display:none}
+.modal-box{background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:24px;max-height:80vh;overflow:auto}
+.modal-box h3{font-size:20px;text-transform:uppercase;margin-bottom:14px;padding-right:30px}
+.modal-box .mrow{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-top:1.5px solid var(--rule);font-size:13.5px}
+.modal-box .mrow:first-of-type{border-top:none}
+.modal-box .mrow .k{color:var(--muted);font-weight:600;flex:none;width:110px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;line-height:1}
+.modal-wrap{position:relative}
+
+/* ===== FORM FIELDS (modal add-task / add-meeting) ===== */
+.field{margin-bottom:14px}
+.field label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field input[type="text"],.field input[type="url"],.field input[type="date"],.field input[type="email"],.field input[type="password"],.field select,.field textarea{
+  width:100%;border:2px solid var(--ink);padding:9px 10px;font-size:13.5px;background:var(--paper);font-family:inherit;
+}
+.field textarea{resize:vertical;min-height:64px}
+.-missing{border-color:var(--hazard)!important;box-shadow:0 0 0 1px var(--hazard)}
+.form-error{color:var(--hazard);font-size:12.5px;font-weight:700;margin-top:10px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.field-row{grid-template-columns:1fr}}
+.modal-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.modal-actions button{white-space:nowrap}
+.view-head .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+a.btn-link{text-decoration:none;display:inline-flex;align-items:center}
+.btn-secondary{
+  background:var(--paper);color:var(--ink);border:2px solid var(--ink);padding:10px 20px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;font-size:12.5px;cursor:pointer;
+}
+.btn-secondary:hover{background:var(--rule)}
+.btn-danger{
+  background:var(--paper);color:var(--hazard);border:2px solid var(--hazard);padding:10px 20px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;font-size:12.5px;cursor:pointer;
+}
+.btn-danger:hover{background:var(--hazard);color:var(--paper)}
+.btn-sm{padding:9px 14px;font-size:11px}
+.link-inline{display:flex;gap:8px;align-items:stretch}
+.link-inline input{flex:1}
+.view-head .actions{display:flex;gap:10px}
+a.deliv-link,a.entregable-link{color:var(--ink);text-decoration:underline;text-decoration-color:var(--signal);text-underline-offset:2px}
+a.deliv-link:hover,a.entregable-link:hover{color:var(--hazard);text-decoration-color:var(--hazard)}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.custom-tag{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1.5px solid var(--sky);color:var(--ink);background:var(--sky);margin-left:8px;vertical-align:middle}
+
+/* ===== REUNIONES ===== */
+.meeting-compose{border:2px solid var(--ink);padding:16px;background:var(--card);margin-bottom:24px}
+.meeting-item{border:2px solid var(--ink);padding:14px 16px;margin-bottom:10px;background:var(--card)}
+.meeting-item.-historical{border-style:dashed;background:transparent}
+.meeting-item .mhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.meeting-item .mdate{font-size:15px;font-weight:800}
+.meeting-item .mmeta{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.meeting-item .mbody{font-size:13.5px;line-height:1.5;margin-top:8px;color:var(--ink)}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+::selection{background:var(--ink);color:var(--chrome)}
+
+.row-delete{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px}
+.row-delete:hover{color:var(--hazard)}
+.note-item,.meeting-item{position:relative}
+.note-item .row-delete,.meeting-item .row-delete{position:absolute;top:0;right:0}
+</style>
+
+<div id="app">
+  <header class="cover">
+    <div class="cover-art">
+      <img class="cover-dog" src="img/portada-perro.jpg" alt="" width="560" height="358">
+      <h1 class="cover-title">Plan de acción</h1>
+      <p class="cover-sub">Tablero de seguimiento de trabajo</p>
+      <div class="cover-logo" role="img" aria-label="Evelyna">
+        <svg viewBox="0 0 318 91" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path d="M316.769 68.2337L316.666 68.1106L316.559 67.9723C315.871 66.9327 315.396 65.7675 315.16 64.5436C314.859 62.6921 314.726 60.8174 314.76 58.942V47.6259C314.76 41.6092 313.971 36.5559 312.418 32.6148C311.024 29.0837 306.893 24.7479 301.691 23.2924C296.29 21.7549 288.525 22.5493 283.646 24.0919C281.511 24.7549 279.513 25.7965 277.747 27.1669C276.015 28.4408 274.545 30.0364 273.417 31.8665C272.959 32.6682 272.59 33.5171 272.315 34.3983C271.979 35.4458 271.784 36.5333 271.736 37.6322C271.696 38.6162 271.821 39.6 272.105 40.5432C272.271 41.1156 272.509 41.6648 272.812 42.178C273.32 43.0438 274.009 43.7901 274.831 44.3664C276.048 45.1917 277.499 45.6016 278.967 45.5349C280.869 45.4904 282.676 44.6922 283.989 43.3158C284.337 42.9664 284.651 42.5855 284.927 42.178C285.798 40.8494 286.278 39.3025 286.311 37.7142C286.338 37.0869 286.288 36.4587 286.163 35.8435C286.163 35.7462 286.122 35.6437 286.101 35.5309L285.87 34.429C285.788 34.019 285.681 33.4758 285.64 33.2144V33.1837C285.566 32.6249 285.542 32.0606 285.568 31.4975C285.621 30.7472 285.824 30.0151 286.165 29.3444C286.506 28.6737 286.977 28.078 287.551 27.5923C288.423 26.7869 289.529 26.2821 290.708 26.1521H290.801H290.857H291.123H291.375C291.487 26.1521 291.6 26.1521 291.718 26.1521C293.133 26.1705 294.506 26.6331 295.644 27.4744H295.674C296.382 27.9958 296.976 28.6548 297.422 29.4117L297.473 29.4936C298.565 31.3284 299.293 34.8031 299.431 38.7853V41.6194H299.334C290.042 42.5266 272.125 50.004 272.433 60.4692C272.484 62.2374 272.991 65.5225 275.789 67.6443C277.916 69.2638 280.217 70.0684 283.477 70.3144C287.274 70.6689 291.103 70.1662 294.68 68.8435C294.945 68.7409 295.216 68.652 295.49 68.577C297.96 67.8371 300.622 68.0871 302.911 69.274H302.937H302.962C305.955 69.2996 310.183 69.3303 313.387 69.3252C316.175 69.3252 317.338 69.2791 317.784 69.2433L317.681 69.1612C317.348 68.8823 317.042 68.5716 316.769 68.2337ZM297.991 62.5961C297.415 63.2728 296.676 63.7906 295.844 64.1001C295.011 64.4097 294.113 64.5006 293.235 64.3642C292.589 64.2673 291.974 64.0245 291.436 63.6542C290.897 63.2839 290.451 62.7958 290.129 62.2271C289.237 60.787 288.786 58.6806 288.786 55.9849C288.725 54.0403 289.058 52.1034 289.765 50.291C290.458 48.7425 291.574 47.4208 292.984 46.4779C294.775 45.0239 297.011 44.2295 299.318 44.228H299.431V57.5993C299.431 59.7056 298.949 61.3866 297.991 62.5961Z" fill="currentColor"/>
+        <path d="M50.9939 51.1065L50.6813 51.5677C50.4661 51.8803 50.2456 52.2032 50.0149 52.5159C47.9607 55.3025 45.5307 57.7912 42.7939 59.9112C40.2095 61.9072 37.34 63.5035 34.2813 64.6467C31.1192 65.8152 27.962 65.9741 25.2867 65.9741C23.0471 65.9741 21.5148 65.4155 20.7358 64.3239C19.9568 63.2322 19.5777 61.1412 19.5777 58.056V38.1402H19.6955C21.3802 38.1339 23.0623 38.2728 24.7232 38.5553C26.0109 38.6886 27.2905 38.8905 28.5567 39.1601C30.9076 39.6632 33.1785 40.4857 35.3063 41.6047C36.0904 42.0468 36.85 42.5309 37.5818 43.0551V29.8428C36.8508 30.3682 36.0912 30.8524 35.3063 31.2932C33.1787 32.4128 30.9077 33.2353 28.5567 33.7378C25.6377 34.3204 22.6717 34.6361 19.6955 34.6808H19.5777V8.7687H19.6955C19.9159 8.7687 25.174 8.8456 26.4912 8.98398C29.336 9.26873 32.1222 9.97696 34.7578 11.0852C37.4285 12.2589 39.8902 13.8601 42.0456 15.8259C43.0373 16.5493 43.9805 17.3368 44.8694 18.1833C45.9969 19.1725 47.0067 20.0694 47.9139 20.9099V5.42725H0C0.4707 5.81054 0.887799 6.25523 1.24021 6.74948C1.97168 7.85632 2.47849 9.09616 2.73167 10.3985C3.06887 12.5199 3.21129 14.6677 3.15709 16.815V57.9176C3.21335 60.065 3.07091 62.213 2.73167 64.3341C2.4779 65.6354 1.97313 66.8748 1.24547 67.9831C0.888551 68.4753 0.469924 68.9196 0 69.3054H51.614V50.0251C51.4141 50.3941 51.204 50.758 50.9939 51.1065Z" fill="currentColor"/>
+        <path d="M89.1287 40.1438C90.5432 37.284 91.8345 34.8394 92.9672 32.8816C94.0922 30.9354 95.3473 29.0674 96.7238 27.2902C97.3542 26.5214 97.8873 25.8962 98.3434 25.3683C98.7704 24.872 99.2385 24.4126 99.7425 23.9948C100.115 23.6964 100.511 23.429 100.926 23.1953H86.648C87.5141 24.4612 87.9192 26.2703 87.8577 28.5766C87.8056 31.1289 87.4528 33.6662 86.8069 36.136C86.0672 38.8989 85.0774 41.5887 83.8497 44.172L81.4667 49.1125L81.4104 48.9997L81.3591 49.1074L74.5634 34.7574C73.9995 33.6409 73.5048 32.4907 73.0822 31.3134C72.7948 30.6259 72.5466 29.9226 72.339 29.2069C72.0398 28.2584 71.8675 27.2744 71.8265 26.2806C71.8121 25.6742 71.9518 25.0741 72.2324 24.5364C72.5129 23.9986 72.925 23.5407 73.4305 23.2056H50.2451C51.0793 24.0746 51.8388 25.0124 52.5156 26.0089C52.938 26.5605 53.3266 27.1373 53.679 27.7361C54.3196 28.8123 55.0831 30.2166 55.9492 31.9078L74.7221 70.3967L89.1287 40.1438Z" fill="currentColor"/>
+        <path d="M98.4974 54.4428C99.7697 58.2744 102.01 61.7124 105.002 64.4233C107.994 67.1341 111.636 69.0259 115.574 69.9152L115.707 69.9459L115.887 69.987C116.43 70.0946 117.009 70.1868 117.711 70.2688C118.029 70.3098 118.357 70.3303 118.675 70.3559C119.187 70.3918 119.602 70.4174 120.012 70.4226C120.084 70.4226 120.156 70.4226 120.222 70.4226C120.313 70.4276 120.403 70.4276 120.494 70.4226H120.561C126.429 70.3834 132.059 68.0941 136.289 64.0266C137.972 62.4213 139.408 60.577 140.553 58.553C140.63 58.43 140.692 58.3173 140.758 58.2046L140.886 57.9739C141.911 56.0366 142.663 53.967 143.121 51.8239H142.347C140.451 54.699 138.867 56.2929 136.71 57.4922C134.225 58.8069 131.443 59.4583 128.633 59.3833C118.834 59.3833 113.821 53.6945 113.734 42.4707V42.358H140.897C141.167 42.3576 141.434 42.2978 141.678 42.1826C141.923 42.0675 142.139 41.8999 142.311 41.6918C142.486 41.4799 142.612 41.2327 142.682 40.9673C142.752 40.7019 142.764 40.4246 142.716 40.1543C142.506 39.4316 142.255 38.6987 141.978 37.9915C140.32 33.7053 137.425 30.0092 133.66 27.3735C129.896 24.7378 125.432 23.2817 120.837 23.1904H120.653H120.458C107.646 23.1904 97.252 33.7941 97.252 46.827C97.2539 49.4161 97.6746 51.9879 98.4974 54.4428ZM113.647 39.2215C113.647 35.1215 114.313 31.9081 115.63 29.689C116.948 27.4698 118.854 26.3065 121.268 26.3065C122.593 26.2345 123.899 26.642 124.948 27.4545C125.844 28.213 126.485 29.4174 126.864 31.042L126.772 31.1189L126.875 31.0932C127.108 32.0748 127.116 33.0962 126.899 34.0815C126.682 35.0667 126.246 35.9902 125.622 36.783C124.998 37.5759 124.203 38.2176 123.297 38.6603C122.39 39.1029 121.395 39.335 120.386 39.3394H113.626L113.647 39.2215Z" fill="currentColor"/>
+        <path d="M146.898 6.49854C146.928 6.53954 146.964 6.5754 146.995 6.61128C147.052 6.67283 147.105 6.73787 147.154 6.80603C147.842 7.84328 148.318 9.007 148.553 10.2296C148.873 12.2218 149.009 14.2394 148.958 16.2566V19.6852V58.6353C149.009 60.6506 148.876 62.6664 148.558 64.6572C148.323 65.8602 147.858 67.0068 147.19 68.0346L147.159 68.0807C146.828 68.5456 146.437 68.9644 145.996 69.3261H167.331C166.891 68.9649 166.5 68.548 166.168 68.0859C165.484 67.0467 165.01 65.8836 164.774 64.6623C164.454 62.67 164.318 60.6525 164.369 58.6353V0C163.257 0.399751 162.273 0.727774 161.448 0.984025C160.623 1.24028 159.772 1.49653 158.885 1.75278L156.261 2.5164L153.017 3.45938C151.797 3.81301 150.69 4.11539 149.722 4.36139H149.691C148.399 4.68427 147.205 5.03793 146.047 5.42743L145.878 5.48893C146.254 5.78738 146.595 6.12591 146.898 6.49854Z" fill="currentColor"/>
+        <path d="M170.463 24.9895C171.231 25.8242 171.903 26.7422 172.467 27.7263C173.113 28.8128 173.876 30.217 174.737 31.898L190.112 63.4066C191.137 65.5079 191.757 68.1421 190.835 70.2895L189.103 73.877C188.614 74.804 187.925 75.6104 187.086 76.2372C186.246 76.864 185.277 77.2956 184.249 77.5004C183.168 77.6893 182.06 77.6428 180.998 77.3642C179.937 77.0856 178.948 76.5815 178.099 75.886C177.657 75.5316 177.177 75.2258 176.67 74.9738C175.467 74.3776 174.147 74.0572 172.805 74.0359C171.784 74.0041 170.767 74.1809 169.816 74.5554C168.865 74.9299 168.001 75.4942 167.275 76.2141C166.557 76.9289 165.992 77.7832 165.615 78.7245C165.239 79.6658 165.059 80.6742 165.087 81.6875C165.049 82.9157 165.285 84.1369 165.779 85.262C166.273 86.3872 167.012 87.3879 167.942 88.1912C169.838 89.8517 172.344 90.6922 175.383 90.6922C178.532 90.6967 181.574 89.5544 183.942 87.4788C186.469 85.3366 188.882 81.8977 191.117 77.2288L192.716 73.9796L192.839 73.7182L193.305 72.7649L193.356 72.6317L207.937 40.1237C209.352 37.2588 210.643 34.8141 211.781 32.8564C212.904 30.912 214.157 29.0457 215.532 27.2702C216.168 26.5014 216.696 25.871 217.157 25.3432C217.582 24.846 218.05 24.388 218.556 23.9748C218.927 23.6751 219.323 23.4077 219.74 23.1753H205.462C206.328 24.4412 206.733 26.2503 206.671 28.5514C206.616 31.1035 206.263 33.6404 205.621 36.1108C204.877 38.873 203.885 41.5626 202.658 44.1468L200.347 48.9387H200.101L193.377 34.7476C192.812 33.6299 192.317 32.4779 191.896 31.2984C191.605 30.6118 191.355 29.9084 191.148 29.1921C190.85 28.2448 190.678 27.2627 190.635 26.2708C190.621 25.6639 190.762 25.0635 191.043 24.5257C191.325 23.9879 191.738 23.5303 192.244 23.1958H167.952L168.141 23.2778C169.014 23.7002 169.801 24.2805 170.463 24.9895Z" fill="currentColor"/>
+        <path d="M205.456 23.2009H205.462L205.456 23.1953V23.2009Z" fill="currentColor"/>
+        <path d="M221.051 29.7302L221.149 29.8378C221.207 29.8993 221.262 29.9643 221.313 30.0326C221.998 31.0731 222.471 32.238 222.707 33.4612C223.027 35.45 223.162 37.4642 223.112 39.478V42.9117V57.6359V58.6301C223.163 60.6454 223.029 62.6612 222.712 64.652C222.475 65.8755 221.999 67.0404 221.313 68.0807C220.981 68.5445 220.59 68.963 220.149 69.326H241.5C241.06 68.963 240.669 68.5445 240.337 68.0807C239.651 67.0419 239.176 65.8788 238.938 64.6572C238.62 62.6663 238.486 60.6506 238.538 58.6353V38.2018C238.537 36.949 238.892 35.7216 239.561 34.6628C240.231 33.6039 241.188 32.757 242.32 32.2209C244.304 31.3087 246.164 31.155 247.835 31.9955C248.531 32.3351 249.13 32.8444 249.577 33.4766C250.063 34.1445 250.39 34.9137 250.536 35.7265C250.712 36.943 250.787 38.1721 250.761 39.4011V58.6507C250.816 60.666 250.682 62.6821 250.361 64.6725C250.127 65.8944 249.653 67.0578 248.967 68.096C248.635 68.5611 248.242 68.9799 247.799 69.3414H269.083C268.642 68.9816 268.251 68.5645 267.92 68.1011C267.232 67.0635 266.757 65.9 266.521 64.6777C266.203 62.6852 266.069 60.6677 266.121 58.6507V36.4696C266.18 34.5002 266.008 32.5308 265.608 30.6015C265.291 29.2916 264.691 28.067 263.85 27.014C262.441 25.2868 260.032 23.2266 256.552 23.2266C245.877 23.2266 239.722 29.6789 238.769 31.2728L238.569 31.6111L238.538 23.2727C237.431 23.6622 236.447 23.9902 235.617 24.2567C234.787 24.5232 233.931 24.7692 233.054 25.0203L230.43 25.7891L227.186 26.7321C225.966 27.0857 224.859 27.3829 223.891 27.6341C223.317 27.7724 222.743 27.9108 222.071 28.0594L221.277 28.3362L220.047 28.7615C220.417 29.0456 220.754 29.3705 221.051 29.7302Z" fill="currentColor"/>
+      </svg>
+      </div>
+    </div>
+  </header>
+  <div class="cover-meta">
+    <span class="sync-chip"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Conectando…</span></span>
+    <button class="btn-secondary btn-sm" id="export-btn">⬇ Exportar a Excel</button>
+  </div>
+
+  <div class="tablero-bar" id="tablero-bar"></div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <main id="view" role="tabpanel"></main>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal-box modal-wrap" id="modal-box"></div>
+</div>
+
+<!-- ============================================================
+     CONFIGURACIÓN DEL WEB APP DE GOOGLE APPS SCRIPT
+     - url: la "URL de la aplicación web" que devuelve Apps Script al
+       implementar (termina en /exec).
+     - token: el mismo valor que ACCESS_TOKEN en Code.gs.
+       No es un login por persona: cualquiera con este link + token puede
+       editar, igual que compartir el Sheet con "cualquiera con el link".
+     Al abrir la página se hace UNA lectura que trae todo: las tareas base
+     leídas en vivo de "01"/"02" (que el script nunca escribe) y lo
+     editable desde la web (estados, fechas, links, notas, tareas nuevas
+     y reuniones, guardado en las pestañas "WebApp - ..."). Después solo
+     escribe cuando el usuario crea, edita o borra algo.
+     Mientras esto no esté completo (o el Web App no responda), el sitio
+     sigue funcionando en modo local (localStorage) con los datos
+     incluidos en este archivo — no se rompe nada por dejarlo así.
+     ============================================================ -->
+<script>
+  window.GULLI_GAS_CONFIG = {
+    url: "https://script.google.com/macros/s/AKfycby6AGbv4jm4CFW5X0Tgt8w6ygOghZeoV2woaL8rb-tketHRvTeVW9H3DtfMvzsWY8OD/exec",
+    token: "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu"
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* =====================================================================
+   DATA — leído del Sheet "Evelyna I CONSULTORÍA: Dra. Daniela Gulli"
+   ===================================================================== */
+/* Datos del Sheet: los tres tableros de trabajo y las reuniones de la hoja 01.
+   Se refrescan en cada lectura; esto es lo último que quedó guardado. */
+let TABLEROS_DATA = [{"id": "admin", "label": "Administración", "hoja": "02 I Proceso de trabajo I Aministración", "objetivo": "Fidelización de pacientes", "prioridades": [{"n": 1, "tt": "Crear un funnel que permita construir un sistema de ventas predecibles", "desc": ""}, {"n": 2, "tt": "Paquetes comerciales invierno (De venta única a venta de bono)", "desc": ""}, {"n": 3, "tt": "Mejorar el circuito de derivación y presupuesto", "desc": ""}], "iniciativas": [{"link": null, "prioridad": null, "tema": "Médicos", "tarea": "Actulizar: Sheet de la reunión falta info JULIO + AGOSTO + SEPRIEMBRE", "responsable": "Gaby", "inicio": "2026-09-28", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Médicos", "tarea": "Nueva fecha de reunión: Primer sábado del mes", "responsable": "Anto", "inicio": "2026-09-28", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": "https://docs.google.com/spreadsheets/d/1ZVznPCmwz5xcPm91cC_PAAKWPaPC2ONdp_0SEXUIgVk/edit?gid=17703002#gid=17703002", "prioridad": null, "tema": "Médicos", "tarea": "Información previa al paciente sobre el tratamiento: Antes, post, antes y despúes", "responsable": "Ailén", "inicio": "2026-07-20", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Análisis", "tarea": "Experiencia del cliente", "responsable": "Eve", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": "30 pacientes - 10 mil puntos - Por completar form: multiple choice"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Grabar cómo se maneja la clínica institucional", "responsable": "Eve", "inicio": null, "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Valoración de atención", "tarea": "Propuesta", "responsable": "Eve", "inicio": "2026-09-07", "cierre": "2026-09-28", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Lista de precios", "tarea": "Revisar diferencias de valores y porcentajes de descuento y establecer una única lista validada", "responsable": "Gaby/Moni", "inicio": "2026-08-24", "cierre": "2026-09-07", "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Lista de precios", "tarea": "Reunión PRINICIPIO DE MES: Precios - Coordinar", "responsable": "Gaby/Moni", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Compra", "tarea": "Relleno de gluteos", "responsable": "Anto", "inicio": "2026-09-07", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Lista de precios", "tarea": "Definir responsable y circuito para mantener la información actualizada", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/document/d/1ut4MJntpFUg3Dha0puB-Xp81ti0TO6ir-9MqMLPrwTs/edit?tab=t.0#heading=h.mm8za02zm8lg", "prioridad": null, "tema": "Fidelización", "tarea": "Confirmar: Promos internas corporales por PROTOCOLOS .", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "Propuesta", "obs": null}, {"link": null, "prioridad": null, "tema": "Fidelización", "tarea": "Placas para whatsapp + Pantalla", "responsable": "Eve/Fer", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/spreadsheets/d/10BiGTKTjvRv1UthZrll5a_l3LFgq80ot/edit?gid=1812068035#gid=1812068035", "prioridad": null, "tema": "Insumos", "tarea": "Circuito de solicitud, autorización, compra, recepción y pago", "responsable": "Anto", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Endolift", "tarea": "Revisar estructura de costos, insumos, masajes post tratamiento y comisiones", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Administración", "tarea": "Consentimiento de Laser + Endolift + Cirugia: En tablet + SIAP + Transplante Capilar", "responsable": "Ailén", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Depilación", "tarea": "Revisar con Maru los tiempos asignados según las diferentes zonas: Cargar a SIAP", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-09-07", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": "https://docs.google.com/document/d/1Na0O6-HhEVnoqXgNu0ucQvb8yaLfqZF3hrhPi62IqsU/edit?tab=t.0", "prioridad": null, "tema": "Masajes", "tarea": "Macarena: Definir tratamientos, tiempos, valores y comunicación", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-09-07", "finalizado": null, "estado": "En proceso", "obs": null}, {"link": "https://docs.google.com/document/d/1uMYf7Mm7zjChzowBdub0cOrvizb4AYZ58yJNut5himo/edit?tab=t.0", "prioridad": null, "tema": "Capilar Implante", "tarea": "Lanzamiento: información completa + Cosentimiento", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Flebología", "tarea": "Revisar valores, tratamientos a potenciar y comunicación", "responsable": "Gaby", "inicio": "2026-10-05", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Hoja de ruta", "tarea": "Reforzar su utilización para mantener variedad de tratamientos y criterios alineados", "responsable": "Gaby/Dani", "inicio": "2026-09-07", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Agente IA", "tarea": "Armar protocolo de trartamiento con asistente", "responsable": "Dani", "inicio": "2026-09-07", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Asesorias", "tarea": "Gestionar incorporación de impresora", "responsable": "Dani", "inicio": "2026-08-24", "cierre": "2026-09-07", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Línea / ManyChat", "tarea": "Cambiar número", "responsable": "Eve", "inicio": "2026-08-24", "cierre": "2026-09-07", "finalizado": "2026-09-01", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Manychat/Leads", "tarea": "Barridos Sheet: Realizar 10 barridos diarios por persona del equipo de la clínica", "responsable": "Gaby", "inicio": null, "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Comercial", "tarea": "Reunión MIERCOLES: Coordinar con Berenice", "responsable": "Gaby", "inicio": "2026-08-24", "cierre": "2026-08-24", "finalizado": "2026-08-24", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Comercial", "tarea": "Reunión MIERCOLES: Armar sheet de seguimiento", "responsable": "Eve", "inicio": "2026-08-24", "cierre": "2026-08-24", "finalizado": "2026-08-31", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Turnos", "tarea": "Carga automatica de manychat a SIAP", "responsable": "Bere", "inicio": "2026-08-03", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Pagos a profesionales", "tarea": "Ordenar liquidaciones, comisiones y comunicación directa desde administración", "responsable": "Dani", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": "Canal de whatsapp", "tarea": "Envio semanal de agendas, promos, urgencias.", "responsable": "Ailén", "inicio": "2026-08-17", "cierre": "2026-10-05", "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": "Email mkt", "tarea": "recontacto", "responsable": "Anto", "inicio": null, "cierre": null, "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": "Promociones", "tarea": "Enviar desde recepción un recordatorio grupal a los médicos todos los lunes", "responsable": "Anto", "inicio": "2026-08-24", "cierre": "2026-10-05", "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": "Médicos", "tarea": "Pedir a salir con los pacientes.", "responsable": "Dani/Gaby", "inicio": null, "cierre": null, "finalizado": null, "estado": "En testeo", "obs": null}, {"link": "https://docs.google.com/document/d/1T5KxmsEBFJfrSXzzP-Su01nXChxzCatCwJTjZ4gUAdw/edit?tab=t.0", "prioridad": null, "tema": "Presentismos", "tarea": "Estado de situación", "responsable": "Eve", "inicio": "2026-06-03", "cierre": null, "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Libro con servicios + Antes y despues", "responsable": "Fer", "inicio": "2026-07-01", "cierre": null, "finalizado": "2026-07-31", "estado": "Pendiente", "obs": "Presupuesto a cotizar"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Cursos ONLINE I Modelo de negocio", "responsable": "Dani/Eve", "inicio": "2026-04-06", "cierre": null, "finalizado": "2026-06-01", "estado": "En proceso", "obs": "Estructura de cursos"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Proceso de trabajo de Antes y despues con Medicos", "responsable": "Definir", "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Grupo de seguimiento de tareas y recordatorios", "responsable": "Eve", "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Definir competencia de la clínica", "responsable": null, "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": "Puga / Bugallo / barbaro / Muchnik Veronica"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Médico I Hacer el Manual", "responsable": "Dani/Bere", "inicio": null, "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}], "finalizados": [{"link": "https://miro.com/app/board/uXjVG57XARc=/", "prioridad": null, "tema": null, "tarea": "Entender y armar el funnel completo de comercialización", "responsable": "Gaby/Eve", "inicio": "2026-03-18", "cierre": null, "finalizado": "2026-03-23", "estado": "Finalizada", "obs": null}, {"link": "https://miro.com/app/board/uXjVG57XARc=/", "prioridad": null, "tema": null, "tarea": "Análisis de flujo actual de trabajo", "responsable": "Eve", "inicio": "2026-03-17", "cierre": null, "finalizado": "2026-03-23", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/document/d/1kRlP9fLNFie7d9YX4Uf5u_faRiM87TxnS-zBzuXg4yI/edit?tab=t.0", "prioridad": null, "tema": null, "tarea": "Listo de servicios (Otoño - Invierno)", "responsable": "Gaby", "inicio": "2026-03-23", "cierre": null, "finalizado": "2026-03-26", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/presentation/d/10P_PMtqmLcQXQbQaFRTFf5CqQKK-HIiG/edit?slide=id.p1#slide=id.p1", "prioridad": null, "tema": null, "tarea": "Estrategia de campaña de marketing para la venta", "responsable": "Fer", "inicio": "2026-03-23", "cierre": null, "finalizado": "2026-03-26", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "nomenclaturas de siap bien hechas + Sacar admin a Moni", "responsable": "Bere", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Remarketing de CO2 a quienes se hicieron antes I Envio de whatsapp PROMO", "responsable": "Gaby", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": "Genero 1 venta I Solo email markting"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Mejora del funnel de captación de clientes: Instagram Dra. Gulli", "responsable": "Fer/Eve", "inicio": "2026-03-23", "cierre": null, "finalizado": "2026-04-27", "estado": "Finalizada", "obs": null}, {"link": "https://drive.google.com/drive/u/2/folders/1iRGMl4osQXXeklMr4TweXlfH8Wx2-fiw", "prioridad": null, "tema": null, "tarea": "Paquetes de secciones y combinados", "responsable": "Gaby", "inicio": "2026-03-23", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": null}, {"link": "https://drive.google.com/drive/u/2/folders/1iRGMl4osQXXeklMr4TweXlfH8Wx2-fiw", "prioridad": null, "tema": null, "tarea": "Campaña de rosea I Precios", "responsable": "Gaby", "inicio": "2026-04-06", "cierre": null, "finalizado": "2026-04-07", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Remarketing de CO2 a quienes se hicieron antes I Envio de whatsapp PROMO", "responsable": "Bere", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": "No se pudo enviar por whatsapp porque no esta contratado whatsapp en siap, se envio por mail la placa que hizo Fer, Segun recepcion no recibieron consultas"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Email Marketing I Estrategia comercial invierno", "responsable": "Fer", "inicio": "2026-03-23", "cierre": null, "finalizado": "2026-04-14", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/document/d/1ZE2Frrf89R-qU30ksk5PT5QnfhA5oGmp5cCELYElIbk/edit?tab=t.0", "prioridad": null, "tema": null, "tarea": "Hoja de ruta compras I Armar los pasos", "responsable": "Anto/Moni", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": "Armar reunión con Moni I https://docs.google.com/document/d/1ZE2Frrf89R-qU30ksk5PT5QnfhA5oGmp5cCELYElIbk/edit?tab=t.0"}, {"link": "https://docs.google.com/document/d/1OGprLZgUNtIPF6eE3i-iozTGFa99upxClTpEDFcW_9c/edit?tab=t.0", "prioridad": null, "tema": null, "tarea": "Hoja de ruta cambios de agenda", "responsable": "Gaby", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-04-30", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Placas para difusión de los paquetes", "responsable": "Fer", "inicio": "0226-04-01", "cierre": null, "finalizado": "2026-04-14", "estado": "Finalizada", "obs": "PLACAS WHATSAPP"}, {"link": "https://dragulli.siap.miami/do.php?controller=email_library&screen=edit&id=66", "prioridad": null, "tema": null, "tarea": "Activar emails", "responsable": "Fer", "inicio": "2026-04-13", "cierre": null, "finalizado": "2026-04-06", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Estructura de mensajería para funnel", "responsable": "Eve/Gaby", "inicio": "2026-04-08", "cierre": null, "finalizado": "2026-04-27", "estado": "Finalizada", "obs": "Funnel_ManyChat_DraGulli_v2.xlsx I Gaby servicios mensajes"}, {"link": "https://docs.google.com/spreadsheets/d/1KHf9fDY2wudQ84Nth8DTOMe_3gsIafZxEx3z2BG9TOY/edit?gid=1917149663#gid=1917149663", "prioridad": null, "tema": null, "tarea": "MAYO I Proyectado de objetivos", "responsable": "Gaby/Anto/Caro", "inicio": "2026-04-20", "cierre": null, "finalizado": "2026-04-27", "estado": "Finalizada", "obs": null}, {"link": "https://drive.google.com/drive/u/2/folders/12HMSWC6lJMxLKuYSl5OBynG8enSGJlfl", "prioridad": null, "tema": null, "tarea": "HOT SALE  I Definir promos", "responsable": "Gaby", "inicio": "2026-04-27", "cierre": null, "finalizado": "2026-04-27", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Funnel I Campañas de pauta automatizadas", "responsable": "Eve/Gaby/Fer", "inicio": "2026-05-07", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": "Funnel_ManyChat_DraGulli_v2.xlsx"}, {"link": null, "prioridad": null, "tema": null, "tarea": "HOT SALE  I Subir a siap como protocolo", "responsable": "Gaby", "inicio": "2026-04-27", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Informes de ABRIL I Comercial", "responsable": "Bere", "inicio": "2026-05-04", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/document/d/1vN6aG4otSwlTJE8WiPnmhn0IgkE_-6AL0QxVQgwWtjQ/edit?tab=t.0", "prioridad": null, "tema": null, "tarea": "Médicos I Entender cual es el  proceso de atención al cliente (ingreso, derivación, presupuesto)", "responsable": "Caro/Dani", "inicio": "2026-03-09", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": null}, {"link": "https://meet.google.com/cwc-fmmj-uer", "prioridad": null, "tema": null, "tarea": "Médicos I Reunión  MAYO  sábado", "responsable": "Anto", "inicio": "2026-04-06", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": "AGENDAR! SAB 16/5 - ONLINE -  REUNION. 10.30 AM - https://meet.google.com/cwc-fmmj-uer"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Médicos I Minuta para la reunión de los médico", "responsable": "Eve", "inicio": "2026-04-27", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": "Minuta : Capacitación fecha + Fecha de seguimienot con Eve"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Médicos I Bajada de linea comisiones medicas informar a los medicos de forma clara las comisiones", "responsable": "Bere", "inicio": "2026-04-27", "cierre": null, "finalizado": "2026-05-16", "estado": "Finalizada", "obs": "Lo tiene Dani para autorizar"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Capacidad de los profesionales 80% durante mayo", "responsable": "Caro", "inicio": "2026-04-27", "cierre": null, "finalizado": "2026-05-18", "estado": "Finalizada", "obs": "Maru: sumar un día más (Miercoles/Viernes)"}, {"link": null, "prioridad": null, "tema": null, "tarea": "HOT SALE I Plan de acción + metricas de resultado", "responsable": "Fer", "inicio": "2026-04-27", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": "Informe Mayo.pdf"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Estrategia de venta producto: Con tratamiento", "responsable": "Gabi/Recepción", "inicio": "2026-04-20", "cierre": null, "finalizado": "2026-05-04", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Informes de ABRIL I Marketing", "responsable": "Fer", "inicio": "2026-05-04", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": "Informe - Abril.pdf"}, {"link": null, "prioridad": null, "tema": null, "tarea": "MAYO I Informes finales: Marketing y comunicación", "responsable": "Eve", "inicio": null, "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": "EvelynA I Analisis Integral DraGulli Mayo 2026"}, {"link": "https://us05web.zoom.us/j/82013197711?pwd=OHksbx98Gsq72Emyef82VYF2lePoo6.1", "prioridad": null, "tema": null, "tarea": "Médicos I Agendar reunión 6 de Junio", "responsable": "Anto", "inicio": "2026-05-09", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Sistema de costos I Capacitación", "responsable": "Caro", "inicio": "2026-04-27", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": "Actualizar caro"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Reunión semanal equipo recepcion y asesoria", "responsable": "Gaby", "inicio": "2026-05-11", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": "https://drive.google.com/drive/folders/13blg4GMhm6C4GoonO0iDY9FzJKp1hXHu", "prioridad": null, "tema": null, "tarea": "MAYO I Plan de imagenes del mes (Pantalla)", "responsable": "Fer", "inicio": "2026-05-04", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Médicos I Reunión: AGENDAR", "responsable": "Anto", "inicio": "2026-06-06", "cierre": null, "finalizado": "2026-06-06", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Planilla de precios con costos actualizados", "responsable": "Moni", "inicio": "2026-05-11", "cierre": null, "finalizado": "2026-06-06", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Unificar listas de precios: Unificar nomenclatura", "responsable": "Dani/Gaby", "inicio": "2026-03-30", "cierre": null, "finalizado": "2026-06-06", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Verificación Meta", "responsable": "Fer", "inicio": "2026-06-03", "cierre": null, "finalizado": "2026-06-03", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Campaña SAD I Conciencia", "responsable": "Fer", "inicio": "2026-06-08", "cierre": null, "finalizado": "2026-06-08", "estado": "Finalizada", "obs": "SAD"}, {"link": null, "prioridad": null, "tema": null, "tarea": "MAYO/ABRIL I DRIVE I Informes finales: Marketing y comunicación", "responsable": "Fer", "inicio": "2026-06-03", "cierre": null, "finalizado": "2026-06-03", "estado": "Finalizada", "obs": "Mayo - Bere no subio su informe"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Marketing I Dashboard", "responsable": "Fer", "inicio": "2026-05-18", "cierre": null, "finalizado": "2026-05-18", "estado": "Finalizada", "obs": "Métricas Meta  Dra Gulli - Dashboard hola@soyevelyna.com"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Médicos I Fecha próxima renión: 22/08", "responsable": "Anto", "inicio": "2026-07-04", "cierre": null, "finalizado": "2026-07-04", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "JUNIO I Informes finales", "responsable": "Fer/Bere", "inicio": "2026-06-29", "cierre": null, "finalizado": "2026-07-13", "estado": "Finalizada", "obs": "JUNIO"}, {"link": null, "prioridad": null, "tema": null, "tarea": "Pantalla I Junio, aniversario", "responsable": "Fer", "inicio": "2026-07-06", "cierre": null, "finalizado": "2026-07-06", "estado": "Finalizada", "obs": "PANTALLA"}, {"link": "https://docs.google.com/spreadsheets/d/1ZVznPCmwz5xcPm91cC_PAAKWPaPC2ONdp_0SEXUIgVk/edit?gid=17703002#gid=17703002", "prioridad": null, "tema": null, "tarea": "Médicos I Información previa al paciente sobre el tratamiento: Antes, post, antes y despúes", "responsable": "Fer", "inicio": "2026-07-04", "cierre": "2026-07-20", "finalizado": "2026-07-20", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "Verificación del celular de Gabi", "responsable": "Fer", "inicio": "2026-07-04", "cierre": "2026-07-04", "finalizado": "2026-07-04", "estado": "Finalizada", "obs": "marketingdigital.push@gmail.com hacerlo antes que Dani se vaya de vacas"}, {"link": null, "prioridad": null, "tema": "Anivesario de la clínica", "tarea": "propuesta de campaña interca + externa (julio)", "responsable": "Fer", "inicio": "2026-06-15", "cierre": "2026-07-20", "finalizado": "2026-07-20", "estado": "Finalizada", "obs": "ANIVERSARIO"}, {"link": null, "prioridad": null, "tema": "Siap", "tarea": "Determinar horarios de tratamientos", "responsable": "Gaby/Anto/Caro", "inicio": "2026-05-04", "cierre": "2026-07-20", "finalizado": "2026-07-20", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Cirugías", "tarea": "I Seguimiento de resultados semanales: Endolif (NUEVOS: SOPORTES)", "responsable": "Fer", "inicio": "2026-06-03", "cierre": "2026-07-27", "finalizado": "2026-07-27", "estado": "Finalizada", "obs": "Endolift"}, {"link": null, "prioridad": null, "tema": "Campaña publicitaría", "tarea": "deportistas + post parto (Ginecológica)", "responsable": "Fer", "inicio": "2026-06-08", "cierre": "2026-07-27", "finalizado": "2026-07-27", "estado": "Finalizada", "obs": "Gineco"}, {"link": "https://docs.google.com/document/d/1lbI3GKlE054JL8njJILodM2b2eWbvcMCfnxXfydJp8s/edit?tab=t.0", "prioridad": null, "tema": "plataformas", "tarea": "Sheet de plataformas e emails I Dominios - Claves - Descripción - Responsable", "responsable": "Gaby", "inicio": "2026-06-22", "cierre": "2026-08-03", "finalizado": "2026-08-03", "estado": "Finalizada", "obs": null}, {"link": "https://docs.google.com/document/d/1WMsEU4SOrXgWG7dak9HgC0LQES311sifiYVoRfm-pAE/edit?tab=t.0", "prioridad": null, "tema": "Manychat", "tarea": "I Campaña a los contactos de whatsapp", "responsable": "Eve", "inicio": "2026-06-22", "cierre": "2026-07-30", "finalizado": "2026-07-30", "estado": "Finalizada", "obs": "https://docs.google.com/document/d/1WMsEU4SOrXgWG7dak9HgC0LQES311sifiYVoRfm-pAE/edit?tab=t.0 Clientes I Funnel"}, {"link": null, "prioridad": null, "tema": "Médicos", "tarea": "I Fecha próxima renión: 22/08", "responsable": "Anto", "inicio": "2026-07-04", "cierre": "2026-08-31", "finalizado": "2026-08-31", "estado": null, "obs": "Finalizada"}, {"link": "https://drive.google.com/drive/folders/1sJXqrb7WCa717HmuhurHkoyYkCK2W7jy", "prioridad": null, "tema": "Campaña SAD", "tarea": "I Conciencia", "responsable": "Fer", "inicio": "2026-06-08", "cierre": "2026-06-08", "finalizado": "2026-06-08", "estado": "Finalizada", "obs": "SAD"}, {"link": "https://docs.google.com/document/d/152BIfn4buBGF7u3MpjQdegNy85KG9gSU/edit?usp=drive_web&ouid=112033543943705345822&rtpof=true", "prioridad": null, "tema": "Endolift", "tarea": "Protocolo post Endolift: Macarena se encuentra armándolo para enviar a Daniela para aprobación", "responsable": "Dani", "inicio": "2026-08-24", "cierre": "2026-06-08", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "ManyChat", "tarea": "Activar: campañas ads", "responsable": "Eve", "inicio": "2026-08-03", "cierre": "2026-08-03", "finalizado": "2026-08-03", "estado": "Finalizada", "obs": "Joaquin, Romi y testimonios."}, {"link": "https://docs.google.com/document/d/1xMDxVaRWGXGlD0Qc37qBaR_wqieJbJk-fyRlUQunIqo/edit?tab=t.0", "prioridad": null, "tema": "Médicos", "tarea": "Días + horarios + especialidades", "responsable": "Anto", "inicio": "2026-08-03", "cierre": "2026-07-27", "finalizado": "2026-07-27", "estado": "Finalizada", "obs": null}], "opciones": {"responsable": ["Anto", "Bere", "Bere/Gaby", "Caro", "Dani/Bere", "Dani/Gaby", "Eve/Gaby", "Fer", "Gaby", "Gaby/Anto/Caro", "Gaby/Bere", "Pao", "Eve", "Fer/Eve"], "tema": [], "estado": ["Pendiente", "En proceso", "Finalizada", "En testeo", "Seguimiento"]}}, {"id": "medicos", "label": "Médicos", "hoja": "03 I Proceso de trabajo I Médicos", "objetivo": "Que el equipo médico funcione como motor de la clínica: con derivaciones ordenadas, objetivos claros, comisiones respetadas y un POE con seguimiento real.", "prioridades": [{"n": 1, "tt": "DERIVACIONES INTERNAS. Construir un circuito claro de derivación entre médicos que no se pierda ni quede sin seguimiento.", "desc": ""}, {"n": 2, "tt": "COMISIONES E INGRESOS MÉDICOS. Que cada médico entienda, vea y confíe en el sistema de comisiones.", "desc": ""}, {"n": 3, "tt": "POE CON SEGUIMIENTO Y MEDICIÓN. Que el POE deje de ser un documento estático y se convierta en una herramienta de trabajo semanal.", "desc": ""}], "iniciativas": [{"link": null, "prioridad": null, "tema": null, "tarea": 1, "responsable": "Recepción + MKT", "inicio": "2026-07-04", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 2, "responsable": "Gaby", "inicio": "2026-06-05", "cierre": null, "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 3, "responsable": "Dani", "inicio": "2026-05-18", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": "Práctica"}, {"link": null, "prioridad": null, "tema": null, "tarea": 5, "responsable": "Dani/Gaby", "inicio": "2026-05-17", "cierre": null, "finalizado": null, "estado": "Seguimiento", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 6, "responsable": "Dani", "inicio": "2026-05-18", "cierre": null, "finalizado": null, "estado": "Seguimiento", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 7, "responsable": "Fer", "inicio": "2026-06-06", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 3, "responsable": null, "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}, {"link": "https://docs.google.com/document/d/1XHnEoHKoaKlIsMwlGB2bGiJc_GaV2hHpmx6vQmlDirM/edit?tab=t.0", "prioridad": null, "tema": null, "tarea": 8, "responsable": "Caro", "inicio": "2026-05-22", "cierre": null, "finalizado": null, "estado": "En testeo", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 10, "responsable": "Anto", "inicio": "2026-06-06", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": 11, "responsable": "Dani", "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}, {"link": null, "prioridad": null, "tema": null, "tarea": "PENDIENTES", "responsable": null, "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}, {"link": "https://docs.google.com/document/d/1J6JZcrZk4t3MFwZ5R4cDYFK5NlCBP_6jROigTSzf_18/edit?tab=t.0#heading=h.nvwbcppvfd8v", "prioridad": null, "tema": null, "tarea": 1, "responsable": null, "inicio": null, "cierre": null, "finalizado": null, "estado": null, "obs": null}], "finalizados": [{"link": null, "prioridad": null, "tema": null, "tarea": 1, "responsable": "Moni", "inicio": "2026-05-16", "cierre": null, "finalizado": null, "estado": "Finalizada", "obs": null}], "opciones": {"responsable": ["Caro", "Dani/Eve", "Eve/Fer", "Fer", "Gabi/Recepción", "Eve", "Eve/Gaby/Fer", "Moni", "Gaby", "Moni", "Bere/Gaby", "Dani", "Anto", "Recepción + MKT"], "tema": [], "estado": ["Pendiente", "En proceso", "Finalizada", "En testeo", "Seguimiento"]}}, {"id": "comercial", "label": "Comercial", "hoja": "04 I Proceso de trabajo: COMERCIAL", "objetivo": "Fidelización de pacientes", "prioridades": [{"n": 1, "tt": "Crear un funnel que permita construir un sistema de ventas predecibles", "desc": ""}, {"n": 2, "tt": "Paquetes comerciales invierno (De venta única a venta de bono)", "desc": ""}, {"n": 3, "tt": "Mejorar el circuito de derivación y presupuesto", "desc": ""}], "iniciativas": [{"link": null, "prioridad": null, "tema": "Pauta I Dani", "tarea": "Subir contenidos de YOUTUBE", "responsable": "Luz", "inicio": "2026-08-26", "cierre": "2026-09-09", "finalizado": null, "estado": "Finalizada", "obs": "Alcance de Dani"}, {"link": null, "prioridad": null, "tema": "Contenido", "tarea": "Relleno de gluteos : Octubre", "responsable": "Fer", "inicio": "2026-09-15", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Capilar Implante", "tarea": "Lanzamiento", "responsable": "Fer", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Análisis", "tarea": "Experiencia del cliente", "responsable": "Bere", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": "30 pacientes - 10 mil puntos - Por completar form: multiple choice"}, {"link": null, "prioridad": null, "tema": "Influencer", "tarea": "El polaco", "responsable": "Fer", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "Seguimiento", "obs": "Se les escribió, se sigue insistiendo"}, {"link": null, "prioridad": null, "tema": "Influencer", "tarea": "Mamá de Lali, Wanda, Del Serra, Elegante, Kari la prin.", "responsable": "Fer", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "Seguimiento", "obs": "Se les escribió, se sigue insistiendo"}, {"link": null, "prioridad": null, "tema": "Manychat", "tarea": "Conección con SIAP: Definir integración", "responsable": "Dani", "inicio": "2026-08-26", "cierre": "2026-08-26", "finalizado": "2026-08-26", "estado": "Pendiente", "obs": "POR EL MOMENTO SE DEFUNIO QUE NO"}, {"link": null, "prioridad": null, "tema": "Manychat", "tarea": "Conección con SIAP: Coordinar reunión con programadores", "responsable": "Dani", "inicio": "2026-08-26", "cierre": "2026-08-26", "finalizado": "2026-08-26", "estado": "Pendiente", "obs": "POR EL MOMENTO SE DEFUNIO QUE NO"}, {"link": null, "prioridad": null, "tema": "Manychat", "tarea": "Flujo de la web", "responsable": "Eve", "inicio": "2026-08-26", "cierre": "2026-09-04", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Manychat", "tarea": "Flujo de la web: pasar a maty", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-04", "finalizado": null, "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Pauta I Clínica", "tarea": "Activar pauta de clínica a manychat", "responsable": "Eve", "inicio": "2026-08-26", "cierre": "2026-06-25", "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Pauta", "tarea": "Nuevas piezas de septiembre: SUBIR", "responsable": "Luz", "inicio": "2026-09-02", "cierre": "2026-09-04", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Youtube", "tarea": "Propuesta de nuevos temas", "responsable": "Fer", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}, {"link": null, "prioridad": null, "tema": "Youtube", "tarea": "Estrategia par aumentar vistas en youtube", "responsable": "Fer", "inicio": "2026-09-02", "cierre": "2026-09-07", "finalizado": null, "estado": "En proceso", "obs": "Shorts extras: SHORTS"}, {"link": null, "prioridad": null, "tema": "Testimonios", "tarea": "Paciente cuente la experiencia", "responsable": "Dani", "inicio": "2026-09-02", "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Instagram Clínica", "tarea": "Incorporar tratamientos por médicos: Post", "responsable": "Fer", "inicio": null, "cierre": null, "finalizado": null, "estado": "En proceso", "obs": "Carrusel septiembe por especialidad"}, {"link": null, "prioridad": null, "tema": "Médicos", "tarea": "Días + horarios + especialidades", "responsable": null, "inicio": null, "cierre": null, "finalizado": null, "estado": "Pendiente", "obs": null}, {"link": null, "prioridad": null, "tema": "Alianzas", "tarea": "MERAKI  I Propuesta de acción", "responsable": "Fer", "inicio": "2026-06-08", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": "ALIANZAS"}, {"link": null, "prioridad": null, "tema": "Alianzas", "tarea": "Nino (Peluquería) I Propuesta de acción", "responsable": "Fer", "inicio": "2026-06-08", "cierre": null, "finalizado": null, "estado": "En proceso", "obs": null}], "finalizados": [{"link": null, "prioridad": null, "tema": "Pauta", "tarea": "Confirmar lo del celular", "responsable": "Luz", "inicio": "2026-08-26", "cierre": "2026-08-28", "finalizado": "2026-08-28", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Pauta", "tarea": "Grafica fea subir", "responsable": "Luz", "inicio": "2026-08-26", "cierre": "2026-08-28", "finalizado": "2026-08-28", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Pauta I Clínica", "tarea": "SEPTIEMBRE I Contenido:  Celulitis + Capilar", "responsable": "Fer", "inicio": "2026-09-02", "cierre": "2026-09-09", "finalizado": "2026-09-08", "estado": "Finalizada", "obs": "Capilar  celulitis"}, {"link": null, "prioridad": null, "tema": "Pantalla", "tarea": "Septiembre", "responsable": "Fer", "inicio": "2026-09-02", "cierre": "2026-09-09", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": "PANTALLA"}, {"link": null, "prioridad": null, "tema": "Endolif", "tarea": "Hablar del diferencial: con la fibra optica que tiene la candula. (Educar) fibre en la punto. Vos podes trabajar mejor tensión (la q tenemos especial para flasidez para la piel)", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-07", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": "Carrusel Endolift | Mailing agosto | Se filma el 04-09"}, {"link": null, "prioridad": null, "tema": "Pauta", "tarea": "Nuevas piezas de septiembre", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-04", "finalizado": "2026-09-07", "estado": "Finalizada", "obs": "PIEZAS"}, {"link": null, "prioridad": null, "tema": "Celulitis", "tarea": "Reforzar comunicación, opciones disponibles, valores e información comercial", "responsable": "Fer", "inicio": "2026-09-02", "cierre": "2026-09-09", "finalizado": "2026-09-08", "estado": "Finalizada", "obs": "Reel, mailing y pauta"}, {"link": null, "prioridad": null, "tema": "Email Marketing", "tarea": "Evaluar los resultados: AGOSTO", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-09", "finalizado": "2026-09-02", "estado": "Finalizada", "obs": "Dra Gulli - Dashboard"}, {"link": null, "prioridad": null, "tema": "Email Marketing", "tarea": "Estrategia SEPTIEMBRE", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-09", "finalizado": "2026-09-08", "estado": "Finalizada", "obs": "Dra Gulli - Dashboard"}, {"link": "https://www.instagram.com/p/Dbl27uCE1dz/", "prioridad": null, "tema": "Pauta I Dani", "tarea": "YOUTUBE: pasar contenidos a Luz", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-06-25", "finalizado": "2026-09-02", "estado": "Finalizada", "obs": null}, {"link": null, "prioridad": null, "tema": "Pauta", "tarea": "Pasar textos para manychat", "responsable": "Fer", "inicio": "2026-08-26", "cierre": "2026-09-09", "finalizado": "2026-09-02", "estado": "Finalizada", "obs": "Funnel_ManyChat_DraGulli_v2"}], "opciones": {"responsable": ["Dani", "Eve/Fer", "Fer", "Eve", "Gaby", "Bere", "Ailin", "Luz"], "tema": [], "estado": ["Pendiente", "En proceso", "Finalizada", "En testeo", "Seguimiento"]}}];
+let REUNIONES = [{"fecha": "2026-02-27", "hs": 3, "tarea": "Workshop I Estado de situación", "responsable": "Equipo", "estado": "Finalizado", "resultado": "https://miro.com/app/board/uXjVG57XARc=/", "obs": null}, {"fecha": "2026-03-06", "hs": 1, "tarea": "OKRs vs Estado de situación", "responsable": "Eve", "estado": "Finalizado", "resultado": "Análisis Workshop I Dra. Danila Gulli", "obs": null}, {"fecha": "2026-03-06", "hs": 2, "tarea": "Estructura de Tablero de seguimiento de las tareas.", "responsable": "Eve", "estado": "Proceso", "resultado": null, "obs": null}, {"fecha": "2026-03-06", "hs": 3, "tarea": "Definición de los Tablero de seguimiento de las tareas.", "responsable": "Eve", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-18", "hs": 3, "tarea": "Workshop I Estado de situación  I Médicos", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-23", "hs": 1, "tarea": "Orden de la reunión de quipo", "responsable": "Eve", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-23", "hs": 1, "tarea": "Reunión semanal", "responsable": "Dani", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-23", "hs": 1, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-30", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-03-30", "hs": 0.3, "tarea": "Reunión semanal I Marketing", "responsable": "Eve", "estado": "Finalizado", "resultado": "Reunión con Fer, para actualizar reunión", "obs": null}, {"fecha": "2026-03-31", "hs": 2, "tarea": "Funnel I Dra Gulli I Instagram", "responsable": "Eve + Fer", "estado": "Finalizado", "resultado": "https://miro.com/app/board/uXjVGnMc12E=/", "obs": null}, {"fecha": "2026-04-06", "hs": 1.3, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-04-07", "hs": 2, "tarea": "Funnel I Dra Gulli I Instagram", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-04-13", "hs": 2, "tarea": "Funnel I Dra Gulli I Instagram", "responsable": "Equipo", "estado": "Finalizado", "resultado": "Reunión con Maty", "obs": null}, {"fecha": "2026-04-20", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-04-23", "hs": 2, "tarea": "Funnel I Dra Gulli I Instagram", "responsable": "Equipo", "estado": "Finalizado", "resultado": "Reunión con Gaby", "obs": null}, {"fecha": "2026-04-27", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-04", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-07", "hs": 1, "tarea": "Funnel I Dra Gulli I Instagram", "responsable": "Equipo", "estado": "Finalizado", "resultado": "Reunión con Gaby", "obs": null}, {"fecha": "2026-05-11", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-13", "hs": 3, "tarea": "Reunión I Médicos", "responsable": "Dani + Eve", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-14", "hs": 1, "tarea": "Estructura y reunión", "responsable": "Gaby + Eve", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-16", "hs": 2, "tarea": "Reunión con Médico", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-18", "hs": 1, "tarea": "Maty, orden del funnel", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-05-18", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-02", "hs": 1, "tarea": "Análisis de resultaods del MAYO", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-03", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-06", "hs": 2, "tarea": "Reunión I Médicos", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-08", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-17", "hs": 30, "tarea": "Reunión con Kenko", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-22", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-06-29", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-07-04", "hs": 2, "tarea": "Reunión I Médicos", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-07-06", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-07-13", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-07-20", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-07-27", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-08-03", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-08-10", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-08-17", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-08-24", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-08-31", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-09-02", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-09-07", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-09-08", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-09-14", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": null, "obs": null}, {"fecha": "2026-09-28", "hs": 2, "tarea": "Reunión semanal", "responsable": "Equipo", "estado": "Finalizado", "resultado": "Presencial", "obs": null}];
+let OPCIONES_REUNIONES = {"responsable": ["Eve", "Dani", "Equipo", "Eve + Fer", "Gaby + Eve", "Dani + Eve", "Eve + Maty"], "estado": ["Pendiente", "Proceso", "Finalizado"]};
+let tableroActivo = (function(){ try{ return localStorage.getItem("gulli-tracker:tablero") || "admin"; }catch(e){ return "admin"; } })();
+function tableroData(){
+  return TABLEROS_DATA.find(t=>t.id===tableroActivo) || TABLEROS_DATA[0] ||
+    {id:"admin", label:"Administración", objetivo:"", prioridades:[], iniciativas:[], finalizados:[], opciones:{}};
+}
+let RAW = {etapa1: REUNIONES, iniciativas: [], finalizados: [], backlog: []};
+/* =====================================================================
+   OBJETIVO Y PRIORIDADES (contenido estratégico, Hoja 02)
+   ===================================================================== */
+let OBJETIVO = "";
+let PRIORIDADES = [];
+/* Cambia de tablero: Administración, Médicos o Comercial. */
+function setTablero(id){
+  if(!TABLEROS_DATA.some(t=>t.id===id)) return;
+  tableroActivo = id;
+  try{ localStorage.setItem("gulli-tracker:tablero", id); }catch(e){}
+  aplicarTablero_();
+  render();
+}
+
+/* Vuelca el tablero activo en RAW y rearma las tareas. */
+function aplicarTablero_(){
+  const d = tableroData();
+  RAW.etapa1 = REUNIONES || [];
+  RAW.iniciativas = d.iniciativas || [];
+  RAW.finalizados = d.finalizados || [];
+  RAW.backlog = [];
+  OBJETIVO = d.objetivo || "";
+  PRIORIDADES = d.prioridades || [];
+  SHEET_OPCIONES = Object.assign({responsable:[], tema:[], estado:[]}, d.opciones || {});
+  rebuildTasks_();
+}
+
+/* Los grupos del plan son los TEMAS de la hoja (la 03 no tiene, va en uno solo). */
+const SIN_TEMA = "Sin tema";
+function grupoDe(t){ return (t.tema && String(t.tema).trim()) || SIN_TEMA; }
+function gruposDelTablero(tasks){
+  const set = [];
+  tasks.forEach(t=>{ const g = grupoDe(t); if(!set.includes(g)) set.push(g); });
+  return set.sort((a,b)=> a===SIN_TEMA ? 1 : b===SIN_TEMA ? -1 : a.localeCompare(b));
+}
+
+/* =====================================================================
+   NORMALIZACIÓN Y CLASIFICACIÓN
+   ===================================================================== */
+function normEstado(raw){
+  if(!raw) return "Por hacer";
+  const s = raw.trim().toLowerCase();
+  if(s.startsWith("final")) return "Completado";
+  if(s.startsWith("enviad")) return "Completado";
+  if(s.startsWith("en proceso") || s.startsWith("proceso")) return "En proceso";
+  if(s.startsWith("seguimiento")) return "Seguimiento";
+  if(s.startsWith("revis")) return "Seguimiento";
+  if(s.startsWith("test")) return "En testeo";
+  return "Por hacer";
+}
+const RESP_INITIALS = {"Eve":"EV","Ger":"GE","Fer":"FE","Ari":"AR","Loopa":"LO","Supervisores":"SU","Equipo":"EQ"};
+function initials(r){
+  if(!r) return "—";
+  if(RESP_INITIALS[r]) return RESP_INITIALS[r];
+  const parts = r.trim().split(/\s+/);
+  return (parts.length>1 ? parts[0][0]+parts[1][0] : r.slice(0,2)).toUpperCase();
+}
+function respLabel(r){ return r || "Sin asignar"; }
+/* Opciones de los desplegables de la hoja 02 (ÁREA y RESPONSABLE). Si la web
+   manda algo que no está en la lista, la celda lo rechaza. */
+let SHEET_OPCIONES = {responsable:[], tema:[], estado:[]};
+/* Temas que ya existen en la hoja del tablero, para sugerirlos al cargar. */
+function temasDelSheet(){
+  const set = new Set(SHEET_OPCIONES.tema || []);
+  TASKS.forEach(t=>{ if(t.tema && t.source!=="etapa1") set.add(t.tema); });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function allResponsables(){
+  const base = SHEET_OPCIONES.responsable && SHEET_OPCIONES.responsable.length ? SHEET_OPCIONES.responsable : RESPONSABLES;
+  const set = new Set(base);
+  TASKS.forEach(t=>{ if(t.responsable && t.source!=="etapa1") set.add(t.responsable); });
+  customTasksState.forEach(c=>{ if(c.responsable) set.add(c.responsable); });
+  return Array.from(set);
+}
+function escHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+/* Opciones de un <select>; si el valor actual no está en la lista, se agrega. */
+function optionsHtml(list, current, emptyLabel){
+  const vals = list.slice();
+  if(current && !vals.includes(current)) vals.unshift(current);
+  return `<option value="">${emptyLabel||"—"}</option>` +
+    vals.map(v=>`<option value="${escHtml(v)}" ${v===current?"selected":""}>${escHtml(v)}</option>`).join("");
+}
+/* Responsable como desplegable (antes era texto con sugerencias y solo mostraba
+   nombres parecidos a lo ya escrito). "+ Agregar responsable…" suma un nombre
+   nuevo, que se guarda en la tarea al guardar. */
+const NUEVO_RESP = "__nuevo__";
+function respSelectHtml(current){
+  return optionsHtml(allResponsables(), current, "Sin asignar") + `<option value="${NUEVO_RESP}">+ Agregar responsable…</option>`;
+}
+function wireRespSelect(sel){
+  if(!sel) return;
+  let previo = sel.value;
+  sel.addEventListener("change", ()=>{
+    if(sel.value!==NUEVO_RESP){ previo = sel.value; return; }
+    const nombre = (prompt("Nombre del nuevo responsable:") || "").trim();
+    if(!nombre){ sel.value = previo; return; }
+    if(![...sel.options].some(o=>o.value===nombre)){
+      const opt = document.createElement("option");
+      opt.value = nombre; opt.textContent = nombre;
+      sel.insertBefore(opt, sel.querySelector(`option[value="${NUEVO_RESP}"]`));
+    }
+    if(!RESPONSABLES.includes(nombre)) RESPONSABLES.push(nombre);
+    sel.value = nombre;
+    previo = nombre;
+  });
+}
+function toHref(s){ const v=s.trim(); return /^https?:\/\//i.test(v) ? v : "https://"+v; }
+/* Cada tarea admite hasta 3 links. Se guardan juntos en el campo "link",
+   uno por línea, así la hoja y el backend no necesitan columnas nuevas. */
+const MAX_LINKS = 3;
+/* Carpeta de Drive de trabajo del cliente (botón arriba del Plan de trabajo). */
+const DRIVE_URL = "https://drive.google.com/drive/u/0/folders/1H6BEDfgFArCTALqf5z3VHjCW_elwqGVY";
+function parseLinks(s){ return String(s||"").split(/\s*\n\s*|\s+\|\s+/).map(x=>x.trim()).filter(Boolean).slice(0, MAX_LINKS); }
+function joinLinks(arr){ const v = (arr||[]).map(x=>String(x||"").trim()).filter(Boolean).slice(0, MAX_LINKS); return v.length ? v.join("\n") : null; }
+function linkLabel(url){
+  try{ const u = new URL(toHref(url)); return u.hostname.replace(/^www\./,""); }catch(e){ return url; }
+}
+function fmtDate(iso){
+  if(!iso) return "—";
+  const d = new Date(iso+"T00:00:00");
+  return d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}).replace(".","");
+}
+function fmtDateLong(iso){
+  if(!iso) return "—";
+  const d = new Date(iso+"T00:00:00");
+  return d.toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"});
+}
+function todayMidnight(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function dueDateOf(t){ return t.cierre || t.tiempo || t.inicio || null; }
+function isOverdue(t, estado){
+  if(estado==="Completado") return false;
+  const due = dueDateOf(t);
+  if(!due) return false;
+  return new Date(due+"T00:00:00") < todayMidnight();
+}
+function urgencia(t, estado){
+  if(estado==="Completado") return "Baja";
+  const due = dueDateOf(t);
+  if(!due) return "Baja";
+  const days = Math.round((new Date(due+"T00:00:00") - todayMidnight())/86400000);
+  if(days < 0) return "Alta";
+  if(days <= 10) return "Alta";
+  if(days <= 25) return "Media";
+  return "Baja";
+}
+
+/* =====================================================================
+   CONSTRUCCIÓN DEL DATASET UNIFICADO
+   ===================================================================== */
+/* El id se deriva del contenido (no de la posición) para que los estados,
+   fechas y links guardados sigan apuntando a la misma tarea cuando se
+   vuelven a importar los datos del Sheet con filas nuevas o reordenadas. */
+let idSeen = {};
+function hashId(str){
+  let h = 5381;
+  for(let i=0;i<str.length;i++) h = (((h<<5)+h) ^ str.charCodeAt(i)) >>> 0;
+  return "t"+h.toString(36);
+}
+function mk(base, source){
+  const key = source==="etapa1"
+    ? ["reunion", base.tarea||"", base.inicio||""].join("|")
+    : [tableroActivo, source, base.tema||"", base.tarea||""].join("|");
+  idSeen[key] = (idSeen[key]||0) + 1;
+  const id = hashId(key + "#" + idSeen[key]);
+  const estadoOriginal = base.estado || null;
+  return Object.assign({id, source, estadoOriginal}, base);
+}
+let TASKS = [];
+function rebuildTasks_(){
+  idSeen = {};
+  TASKS = [];
+  RAW.etapa1.forEach(e=>{
+    TASKS.push(mk({tema:"Reuniones", tarea:e.tarea, responsable:e.responsable,
+      inicio:e.fecha, tiempo:e.fecha, cierre:e.fecha, estado:e.estado, obs:e.resultado}, "etapa1", 0));
+  });
+  RAW.iniciativas.forEach(t=> TASKS.push(mk(t, "iniciativa")));
+  RAW.finalizados.forEach(t=> TASKS.push(mk(t, "finalizado")));
+  RAW.backlog.forEach(str=>{
+    const parts = str.split(" I ").map(s=>s.trim());
+    const area = parts[0];
+    let tema = null, desc = parts.slice(1).join(" I ");
+    if(parts.length >= 3){ tema = parts[1]; desc = parts.slice(2).join(" I "); }
+    const faseMatch = desc.match(/Fase\s*(\d)/i);
+    const subfase = faseMatch ? "Fase "+faseMatch[1] : null;
+    const descClean = desc.replace(/Fase\s*\d\s*[·.]?\s*/i,"").trim();
+    const tarea = tema ? (tema+" — "+descClean) : descClean;
+    TASKS.push(mk({area, tema, tarea, subfase, responsable:null, inicio:null, tiempo:null, cierre:null, estado:null, obs:null}, "backlog"));
+  });
+}
+aplicarTablero_(); // vuelca el tablero activo en RAW y construye TASKS
+
+/* Las tareas del Sheet editadas desde la web se guardan como copia en
+   "WebApp - Tareas nuevas" con id "x"+id original (y la original se oculta),
+   así la hoja 02 no se toca. Esas copias no llevan la etiqueta "Nueva". */
+const EDITED_PREFIX = "x";
+function isEditedCopy(id){ return String(id||"").startsWith(EDITED_PREFIX); }
+function customAsTask(doc){
+  return {
+    id: doc.id, source:"custom", tema: doc.tema || null,
+    tarea: doc.tarea, responsable: doc.responsable || null,
+    inicio: doc.inicio || null, cierre: doc.cierre || null,
+    estado: doc.estado || "Por hacer", obs: doc.obs || null, link: doc.link || null,
+    estadoOriginal: doc.estado || null, edited: isEditedCopy(doc.id),
+  };
+}
+
+/* =====================================================================
+   STORE (db capability con fallback local)
+   ===================================================================== */
+let dbNs = null, overridesDoc = null, notesCol = null, customCol = null, meetingsCol = null;
+let overridesState = {};   // {taskId: {estado, link}} — patches onto the seed tasks from the Excel
+let notesState = [];       // [{id,text,author,createdAt}]
+let customTasksState = []; // [{id,tarea,area,tema,responsable,fase,inicio,cierre,estado,link,obs,createdAt}] — tasks added live
+let meetingsState = [];    // [{id,fecha,responsable,duracion,resumen,createdAt}]
+let dbMode = "checking";   // checking | live | local
+
+function localKey(k){ return "gulli-tracker:"+k; }
+function loadLocal(){
+  try{
+    overridesState = JSON.parse(localStorage.getItem(localKey("overrides"))||"{}");
+    notesState = JSON.parse(localStorage.getItem(localKey("notes"))||"[]");
+    customTasksState = JSON.parse(localStorage.getItem(localKey("customTasks"))||"[]");
+    meetingsState = JSON.parse(localStorage.getItem(localKey("meetings"))||"[]");
+  }catch(e){ overridesState = {}; notesState = []; customTasksState = []; meetingsState = []; }
+}
+function saveLocalOverrides(){ try{ localStorage.setItem(localKey("overrides"), JSON.stringify(overridesState)); }catch(e){} }
+function saveLocalNotes(){ try{ localStorage.setItem(localKey("notes"), JSON.stringify(notesState)); }catch(e){} }
+function saveLocalCustom(){ try{ localStorage.setItem(localKey("customTasks"), JSON.stringify(customTasksState)); }catch(e){} }
+function saveLocalMeetings(){ try{ localStorage.setItem(localKey("meetings"), JSON.stringify(meetingsState)); }catch(e){} }
+
+function setSyncUI(mode){
+  dbMode = mode;
+  const dot = document.getElementById("sync-dot");
+  const lbl = document.getElementById("sync-label");
+  dot.classList.remove("-on","-local");
+  if(mode==="live"){ dot.classList.add("-on"); lbl.textContent = "Sincronizado con el equipo"; }
+  else if(mode==="local"){ dot.classList.add("-local"); lbl.textContent = "Modo local (solo este dispositivo)"; }
+  else if(mode==="retrying"){ dot.classList.add("-local"); lbl.textContent = "Sin conexión con el Sheet, reintentando…"; }
+  else { lbl.textContent = "Conectando…"; }
+}
+
+async function patchSeedOverride(taskId, patch){
+  overridesState[taskId] = Object.assign({}, overridesState[taskId], patch);
+  render();
+  if(dbMode==="live" && overridesDoc){
+    const payload = {tasks:{}};
+    payload.tasks[taskId] = Object.assign({}, patch, {updatedAt:new Date().toISOString()});
+    try{ await overridesDoc.update(payload); }
+    catch(e){ try{ await overridesDoc.set(payload); }catch(e2){ console.error(e2); } }
+  } else {
+    saveLocalOverrides();
+  }
+}
+
+async function patchCustomTask(taskId, patch){
+  const idx = customTasksState.findIndex(c=>c.id===taskId);
+  if(idx>=0) customTasksState[idx] = Object.assign({}, customTasksState[idx], patch);
+  render();
+  if(dbMode==="live" && customCol){
+    try{ await customCol.doc(taskId).update(patch); }catch(e){ console.error(e); }
+  } else {
+    saveLocalCustom();
+  }
+}
+
+/* Con el Sheet conectado, las tareas se escriben directo en su fila de "02"
+   y las reuniones en la tabla de "01". Se muestra el cambio al instante,
+   se guarda (en orden) y al terminar se vuelve a leer el Sheet. */
+const ESTADO_A_SHEET = {"Por hacer":"Pendiente","En proceso":"En proceso","Seguimiento":"Seguimiento","En testeo":"En testeo","Completado":"Finalizada"};
+function sheetLive(){ return dbMode==="live" && !!gasData; }
+/* Con el Sheet configurado, las ediciones siempre van al Sheet: se muestran al
+   instante y se guardan en segundo plano, aunque la conexión esté lenta. */
+function sheetMode(){ return gasConfigured() && dbMode!=="local"; }
+
+let resolveFirstRead = null;
+const firstRead = new Promise(r=>{ resolveFirstRead = r; });
+
+let sheetQueue = Promise.resolve();
+let sheetPending = 0;
+
+/* Los cambios por enviar se guardan en el navegador: si se recarga la página
+   antes de que Google responda, se envían en la visita siguiente. */
+function leerPendientes(){ try{ return JSON.parse(localStorage.getItem(localKey("pendientes"))||"[]"); }catch(e){ return []; } }
+function guardarPendientes(list){ try{ localStorage.setItem(localKey("pendientes"), JSON.stringify(list)); }catch(e){} }
+
+function updateSyncLabel(){
+  const lbl = document.getElementById("sync-label");
+  if(!lbl) return;
+  if(sheetPending>0) lbl.textContent = "Guardando " + sheetPending + (sheetPending===1 ? " cambio…" : " cambios…");
+  else if(dbMode==="live") lbl.textContent = "Sincronizado con el equipo";
+  else if(dbMode==="retrying") lbl.textContent = "Sin conexión con el Sheet, reintentando…";
+  else if(dbMode==="checking") lbl.textContent = "Conectando…";
+}
+
+async function sheetWrite(action, payload){
+  const item = {id: "p" + Date.now() + Math.random().toString(36).slice(2,6), action, payload};
+  guardarPendientes(leerPendientes().concat([item]));
+  sheetPending++;
+  updateSyncLabel();
+  const job = sheetQueue.then(async ()=>{
+    // Primera visita sin datos guardados: se espera la primera lectura para usar los ids reales.
+    if(!gasData) await firstRead;
+    // Se saca de pendientes justo antes de enviarlo, para no mandarlo dos veces.
+    guardarPendientes(leerPendientes().filter(x=>x.id!==item.id));
+    const res = await gasWrite_(action, payload);
+    // Un desplegable de la hoja puede rechazar un valor (ej. un Área que no está
+    // en su lista). El resto se guarda igual y eso queda anotado en Observaciones.
+    if(res && res.enObservaciones && res.enObservaciones.length){
+      alert("Guardé la tarea, pero el Sheet no aceptó estos valores porque su desplegable no los tiene:\n\n" +
+        res.enObservaciones.join("\n") + "\n\nQuedaron anotados en Observaciones. Para que entren en su columna, agregá esa opción al desplegable de la hoja.");
+    }
+    return res;
+  }).catch(e=>{
+    console.error(e);
+    if(!e.soft) alert("No se pudo guardar en el Sheet: " + e.message);
+  });
+  sheetQueue = job;
+  await job;
+  // La relectura cuenta como parte del guardado: hasta que termina, las
+  // tareas recién creadas siguen con id provisorio ("tmp…").
+  if(sheetPending===1){ try{ await gasRefresh_(); }catch(e){ console.error(e); } }
+  sheetPending--;
+  updateSyncLabel();
+}
+
+window.addEventListener("beforeunload", (e)=>{
+  if(sheetPending>0){ e.preventDefault(); e.returnValue = ""; }
+});
+
+function sheetTaskEdit(t, fields){
+  const local = TASKS.find(x=>x.id===t.id);
+  if(local){
+    Object.assign(local, fields);
+    if(fields.estado) local.estadoOriginal = ESTADO_A_SHEET[fields.estado] || fields.estado;
+  }
+  const ov = overridesState[t.id];
+  if(ov){ delete ov.estado; delete ov.inicio; delete ov.cierre; }
+  if(fields.link!==undefined) overridesState[t.id] = Object.assign({}, overridesState[t.id], {link: fields.link});
+  render();
+  return sheetWrite("updateTask", {tablero: tableroActivo, id: t.id, fields});
+}
+
+function sheetDeleteTask(t){
+  overridesState[t.id] = Object.assign({}, overridesState[t.id], {hidden:true});
+  render();
+  return sheetWrite("deleteTask", {tablero: tableroActivo, id: t.id});
+}
+
+function setEstado(t, estado){
+  if(t.source==="custom") return patchCustomTask(t.id, {estado});
+  if(sheetMode()) return sheetTaskEdit(t, {estado});
+  return patchSeedOverride(t.id, {estado});
+}
+function setLink(t, link){
+  const value = link && link.trim() ? link.trim() : null;
+  if(t.source==="custom") return patchCustomTask(t.id, {link:value});
+  return patchSeedOverride(t.id, {link:value});
+}
+
+/* Guarda la edición de cualquier tarea (solo los campos que cambiaron).
+   Sin Sheet conectado, las tareas base pasan a una copia local editable. */
+async function saveTaskEdits(t, fields){
+  if(t.source==="custom") return patchCustomTask(t.id, fields);
+  if(sheetMode()) return sheetTaskEdit(t, fields);
+  const base = {tarea:t.tarea, tema:t.tema, responsable:t.responsable, inicio:t.inicio,
+    cierre:t.cierre||t.tiempo, estado:currentEstado(t), obs:t.obs, link:taskLink(t)};
+  const copy = Object.assign(base, fields, {id: EDITED_PREFIX+t.id});
+  await Promise.all([addCustomTask(copy), patchSeedOverride(t.id, {hidden:true})]);
+}
+
+async function addCustomTask(data){
+  if(sheetMode()){
+    customTasksState.unshift(Object.assign({}, data, {id:"tmp"+Date.now()}));
+    render();
+    return sheetWrite("addTask", {tablero: tableroActivo, fields: data});
+  }
+  const local = Object.assign({id:"c"+Date.now()}, data, {createdAt:new Date().toISOString()});
+  customTasksState.unshift(local);
+  render();
+  if(dbMode==="live" && customCol){
+    try{ await customCol.doc(local.id).set(local); }catch(e){ console.error(e); }
+  } else {
+    saveLocalCustom();
+  }
+}
+
+async function deleteCustomTask(taskId){
+  customTasksState = customTasksState.filter(c=>c.id!==taskId);
+  render();
+  if(dbMode==="live" && customCol){
+    try{ await customCol.doc(taskId).delete(); }catch(e){ console.error(e); }
+  } else {
+    saveLocalCustom();
+  }
+}
+
+/* Se muestra al instante y después se guarda: sin esto, en modo
+   sincronizado no aparecía nada hasta recargar la página. */
+async function addMeeting(data){
+  if(sheetMode()){
+    RAW.etapa1.push({fecha:data.fecha, hs:data.duracion, tarea:data.tarea||"Encuentro I Estado del proceso de trabajo",
+      responsable:data.responsable, estado:"Finalizado", resultado:data.resumen, obs:null});
+    rebuildTasks_();
+    render();
+    return sheetWrite("addMeetingSheet", data);
+  }
+  const meeting = Object.assign({}, data, {id:"m"+Date.now(), createdAt:new Date().toISOString()});
+  meetingsState.unshift(meeting);
+  render();
+  if(dbMode==="live" && meetingsCol){
+    try{ await meetingsCol.doc(meeting.id).set(meeting); }catch(e){ console.error(e); }
+  } else {
+    saveLocalMeetings();
+  }
+}
+
+async function deleteMeeting(id){
+  meetingsState = meetingsState.filter(m=>m.id!==id);
+  render();
+  if(dbMode==="live" && meetingsCol){
+    try{ await meetingsCol.doc(id).delete(); }catch(e){ console.error(e); }
+  } else {
+    saveLocalMeetings();
+  }
+}
+
+function deleteSheetMeeting(e){
+  RAW.etapa1 = RAW.etapa1.filter(x=>x!==e);
+  rebuildTasks_();
+  render();
+  return sheetWrite("deleteMeetingSheet", {fecha:e.fecha, tarea:e.tarea, resultado:e.resultado});
+}
+
+async function addNote(text, author){
+  const note = {id:"n"+Date.now(), text, author, createdAt:new Date().toISOString()};
+  notesState.unshift(note);
+  render();
+  if(dbMode==="live" && notesCol){
+    try{ await notesCol.doc(note.id).set(note); }catch(e){ console.error(e); }
+  } else {
+    saveLocalNotes();
+  }
+}
+
+async function deleteNote(id){
+  notesState = notesState.filter(n=>n.id!==id);
+  render();
+  if(dbMode==="live" && notesCol){
+    try{ await notesCol.doc(id).delete(); }catch(e){ console.error(e); }
+  } else {
+    saveLocalNotes();
+  }
+}
+
+/* =====================================================================
+   APPS SCRIPT ADAPTER
+   Implementa la misma interfaz que la db capability de arriba
+   (doc/collection/onSnapshot), respaldada por un Web App de Google Apps
+   Script que lee y escribe en el Google Sheet.
+
+   - UNA sola lectura al abrir la página: trae en el mismo request las
+     tareas base (leídas en vivo de "01"/"02") y lo editable desde la web.
+   - Escribe solo cuando el usuario crea, edita o borra algo.
+   - Sin polling, sin triggers, sin pestañas espejo.
+   ===================================================================== */
+const GAS_CFG = window.GULLI_GAS_CONFIG || {};
+let gasData = null; // snapshot leído al abrir
+
+function gasConfigured(){
+  return !!(GAS_CFG.url && GAS_CFG.token && !/YOUR-/.test(GAS_CFG.url + GAS_CFG.token));
+}
+
+async function gasRead_(){
+  const sep = GAS_CFG.url.indexOf("?")>=0 ? "&" : "?";
+  // Google a veces responde con una página de error pasajera: se reintenta.
+  let lastErr = null;
+  for(let intento=0; intento<4; intento++){
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=>ctrl.abort(), 15000);
+    try{
+      const res = await fetch(GAS_CFG.url + sep + "action=read&token=" + encodeURIComponent(GAS_CFG.token), {signal: ctrl.signal});
+      const json = await res.json();
+      if(!json.ok) throw new Error(json.error || "error leyendo el Sheet");
+      return json;
+    }catch(e){
+      lastErr = e;
+      await new Promise(r=>setTimeout(r, 1000*(intento+1)));
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr;
+}
+
+/* La última lectura buena se guarda en el navegador: al abrir, la web muestra
+   esos datos al instante (los mismos del Sheet) mientras conecta. */
+function guardarLectura(data){ try{ localStorage.setItem(localKey("ultimaLectura"), JSON.stringify(data)); }catch(e){} }
+function leerLectura(){ try{ return JSON.parse(localStorage.getItem(localKey("ultimaLectura"))||"null"); }catch(e){ return null; } }
+function aplicarLectura(data){
+  gasApplySeed_(data.seed);
+  overridesState = data.overrides || {};
+  notesState = data.notes || [];
+  customTasksState = (data.customTasks || []).sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+  meetingsState = data.meetings || [];
+}
+
+/* Vuelve a leer el Sheet después de guardar, para quedar igual que la hoja. */
+async function gasRefresh_(){
+  const data = await gasRead_();
+  gasData = data;
+  guardarLectura(data);
+  if(resolveFirstRead) resolveFirstRead(data);
+  aplicarLectura(data);
+  if(dbMode!=="live") setSyncUI("live");
+  render();
+}
+
+/* Content-Type por defecto (text/plain) a propósito: evita el preflight
+   CORS, que los Web Apps de Apps Script no responden. */
+async function gasWrite_(action, payload){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 45000);
+  let res;
+  try{
+    res = await fetch(GAS_CFG.url, {
+      method: "POST",
+      body: JSON.stringify({token: GAS_CFG.token, action: action, payload: payload}),
+      signal: ctrl.signal
+    });
+  }catch(e){
+    // Sin respuesta: el cambio pudo guardarse igual; la relectura muestra lo que quedó.
+    const err = new Error("sin respuesta de Google en "+action);
+    err.soft = true;
+    throw err;
+  }finally{
+    clearTimeout(timer);
+  }
+  // A veces Google devuelve una página de error aunque el cambio se guardó.
+  let json;
+  try{ json = await res.json(); }
+  catch(e){
+    const err = new Error("respuesta no válida de Google en "+action);
+    err.soft = true;
+    throw err;
+  }
+  if(!json.ok) throw new Error(json.error || ("error en "+action));
+  return json.result;
+}
+
+/* Reemplaza las tareas base por las que vienen del Sheet. */
+function gasApplySeed_(seed){
+  if(!seed) return;
+  if(seed.tableros && seed.tableros.length) TABLEROS_DATA = seed.tableros;
+  REUNIONES = seed.etapa1 || [];
+  if(seed.opcionesReuniones) OPCIONES_REUNIONES = seed.opcionesReuniones;
+  aplicarTablero_();
+}
+
+function gasOverridesDoc_(){
+  return {
+    async update(payload){
+      const patch = (payload && payload.tasks) || {};
+      for(const taskId of Object.keys(patch)){
+        await gasWrite_("setOverride", {taskId: taskId, patch: patch[taskId] || {}});
+      }
+    },
+    async set(payload){ return this.update(payload); },
+    onSnapshot(cb){
+      cb({exists:true, data: ()=> ({tasks: (gasData && gasData.overrides) || {}})});
+    }
+  };
+}
+
+const GAS_COLLECTIONS = {
+  notes:       {key:"notes",       add:"addNote",        update:null,                del:"deleteNote"},
+  customTasks: {key:"customTasks", add:"addCustomTask",  update:"updateCustomTask",  del:"deleteCustomTask"},
+  meetings:    {key:"meetings",    add:"addMeeting",     update:null,                del:"deleteMeeting"}
+};
+
+function gasCollection_(name){
+  const cfg = GAS_COLLECTIONS[name];
+  const ref = {
+    doc(id){
+      return {
+        async set(data){ await gasWrite_(cfg.add, Object.assign({}, data, {id: id})); },
+        async update(patch){ if(cfg.update) await gasWrite_(cfg.update, {id: id, patch: patch}); },
+        async delete(){ await gasWrite_(cfg.del, {id: id}); }
+      };
+    },
+    orderBy(){ return ref; },
+    limit(){ return ref; },
+    onSnapshot(cb){
+      cb({docs: ((gasData && gasData[cfg.key]) || []).map(row=>({data: ()=> row}))});
+    }
+  };
+  return ref;
+}
+
+async function initGasStore_(){
+  if(!gasConfigured()) return null;
+  try{
+    gasData = await gasRead_();
+  }catch(e){ console.error("Apps Script no disponible:", e); return null; }
+  gasApplySeed_(gasData.seed);
+  return {
+    doc(path){
+      if(path==="board/overrides") return gasOverridesDoc_();
+      throw new Error("doc path no soportado: "+path);
+    },
+    collection(name){
+      if(!GAS_COLLECTIONS[name]) throw new Error("collection no soportada: "+name);
+      return gasCollection_(name);
+    }
+  };
+}
+
+/* Con Sheet: muestra al instante la última lectura guardada y conecta en
+   segundo plano. Si Google no responde, sigue reintentando y las ediciones se
+   guardan igual: nunca pasa a "modo local" ni a datos viejos de la página. */
+async function initSheetStore_(){
+  const cache = leerLectura();
+  if(cache && cache.seed){
+    gasData = cache;
+    aplicarLectura(cache);
+    if(resolveFirstRead) resolveFirstRead(cache);
+    render();
+  }
+  overridesDoc = gasOverridesDoc_();
+  notesCol = gasCollection_("notes");
+  customCol = gasCollection_("customTasks");
+  meetingsCol = gasCollection_("meetings");
+  // Cambios que quedaron sin enviar en una visita anterior.
+  const previos = leerPendientes();
+  if(previos.length){
+    guardarPendientes([]);
+    previos.forEach(p=>{ sheetWrite(p.action, p.payload); });
+  }
+  for(;;){
+    try{
+      const data = await gasRead_();
+      gasData = data;
+      guardarLectura(data);
+      if(resolveFirstRead) resolveFirstRead(data);
+      // Si hay cambios guardándose, la relectura al terminar actualiza la pantalla.
+      if(sheetPending===0) aplicarLectura(data);
+      setSyncUI("live");
+      updateSyncLabel();
+      render();
+      return;
+    }catch(e){
+      console.error("Apps Script no disponible, se reintenta:", e);
+      setSyncUI("retrying");
+      updateSyncLabel();
+      await new Promise(r=>setTimeout(r, 20000));
+    }
+  }
+}
+
+async function initStore(){
+  if(gasConfigured()) return initSheetStore_();
+  loadLocal();
+  try{
+    if(window.claude && typeof window.claude.use === "function"){
+      dbNs = await window.claude.use("db");
+    }
+  }catch(e){ dbNs = null; }
+  if(!dbNs){
+    try{ dbNs = await initGasStore_(); }
+    catch(e){ console.error("Error inicializando Apps Script:", e); dbNs = null; }
+  }
+  if(!dbNs){ setSyncUI("local"); render(); return; }
+  overridesDoc = dbNs.doc("board/overrides");
+  notesCol = dbNs.collection("notes");
+  customCol = dbNs.collection("customTasks");
+  meetingsCol = dbNs.collection("meetings");
+  setSyncUI("live");
+  overridesDoc.onSnapshot(snap=>{
+    const data = snap.exists ? snap.data() : null;
+    overridesState = (data && data.tasks) || {};
+    render();
+  }, err=>{ console.error(err); setSyncUI("local"); render(); });
+  notesCol.orderBy("createdAt","desc").limit(200).onSnapshot(snap=>{
+    notesState = snap.docs.map(d=>d.data());
+    render();
+  }, err=>{ console.error(err); });
+  customCol.onSnapshot(snap=>{
+    customTasksState = snap.docs.map(d=>d.data()).sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+    render();
+  }, err=>{ console.error(err); });
+  meetingsCol.orderBy("fecha","desc").limit(300).onSnapshot(snap=>{
+    meetingsState = snap.docs.map(d=>d.data());
+    render();
+  }, err=>{ console.error(err); });
+}
+
+function currentEstado(t){
+  if(t.source==="custom") return t.estado || "Por hacer";
+  const ov = overridesState[t.id];
+  if(ov && ov.estado) return ov.estado;
+  return normEstado(t.estadoOriginal);
+}
+function taskLink(t){
+  if(t.source==="custom") return t.link || null;
+  const ov = overridesState[t.id];
+  /* Los links viven en OBSERVACIONES de la hoja 02 (t.link). Los de la pestaña
+     "WebApp - Overrides" quedan de antes y mandan mientras existan. */
+  return (ov && ov.link) || t.link || null;
+}
+
+/* =====================================================================
+   ESTADO DE FILTROS Y VISTA
+   ===================================================================== */
+const state = { view:"dashboard", filters:{tema:"", estado:"", responsable:"", prioridad:""} };
+const VIEWS = [
+  {id:"dashboard", label:"Dashboard"},
+  {id:"plan", label:"Plan de trabajo"},
+  {id:"finalizadas", label:"Finalizadas"},
+  {id:"timeline", label:"Timeline"},
+  {id:"reuniones", label:"Reuniones"},
+  {id:"entregables", label:"Entregables"},
+  {id:"notas", label:"Notas"},
+];
+const ESTADOS = ["Por hacer","En proceso","Seguimiento","En testeo","Completado"];
+/* Nombre que se ve (y que se guarda en el Sheet) para cada estado interno. */
+const ESTADO_LABEL = {"Por hacer":"Pendiente","En proceso":"En proceso","Seguimiento":"Seguimiento","En testeo":"En testeo","Completado":"Finalizada"};
+function estadoLabel(e){ return ESTADO_LABEL[e] || e; }
+function estadoClass(e){ return "st-" + String(e||"").replace(/\s+/g,"-").replace("ó","o"); }
+const RESPONSABLES = ["Eve","Ger","Fer","Ari","Loopa","Supervisores","Equipo"];
+
+function trackedTasks(){
+  const seed = TASKS.filter(t=>t.source!=="etapa1")
+    .filter(t=>{ const ov = overridesState[t.id]; return !(ov && ov.hidden); })
+    .map(t=>{
+      const ov = overridesState[t.id];
+      // Un override vacío (null) no pisa las fechas que vienen del Sheet.
+      if(!ov || (ov.inicio==null && ov.cierre==null)) return t;
+      const merged = Object.assign({}, t);
+      if(ov.inicio!=null) merged.inicio = ov.inicio;
+      if(ov.cierre!=null) merged.cierre = ov.cierre;
+      return merged;
+    });
+  return seed.concat(customTasksState.map(customAsTask));
+}
+
+function applyFilters(list){
+  const f = state.filters;
+  return list.filter(t=>{
+    if(f.tema!=="" && grupoDe(t)!==f.tema) return false;
+    if(f.estado!=="" && currentEstado(t)!==f.estado) return false;
+    if(f.responsable!==""){
+      if(f.responsable==="__none__"){ if(t.responsable) return false; }
+      else if(t.responsable!==f.responsable) return false;
+    }
+    if(f.prioridad!=="" && urgencia(t, currentEstado(t))!==f.prioridad) return false;
+    return true;
+  });
+}
+
+/* =====================================================================
+   RENDER: SHELL / TABS
+   ===================================================================== */
+function renderTabs(){
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = "";
+  VIEWS.forEach(v=>{
+    const b = document.createElement("button");
+    b.className = "tab-btn" + (state.view===v.id?" -active":"");
+    b.textContent = v.label;
+    b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", state.view===v.id ? "true":"false");
+    b.onclick = ()=>{ state.view=v.id; render(); };
+    nav.appendChild(b);
+  });
+}
+
+/* Selector de tablero de trabajo: Administración · Médicos · Comercial. */
+function renderTableroBar(){
+  const bar = document.getElementById("tablero-bar");
+  if(!bar) return;
+  bar.innerHTML = "";
+  TABLEROS_DATA.forEach(t=>{
+    const pendientes = (t.iniciativas||[]).length;
+    const b = document.createElement("button");
+    b.className = "tablero-btn";
+    b.setAttribute("aria-pressed", t.id===tableroActivo ? "true" : "false");
+    b.innerHTML = `${escHtml(t.label)}<span class="n">${pendientes}</span>`;
+    b.onclick = ()=> setTablero(t.id);
+    bar.appendChild(b);
+  });
+}
+
+function render(){
+  renderTableroBar();
+  renderTabs();
+  const root = document.getElementById("view");
+  root.innerHTML = "";
+  const fns = {dashboard:renderDashboard, plan:renderPlan, finalizadas:renderFinalizadas, timeline:renderTimeline, reuniones:renderReuniones, entregables:renderEntregables, notas:renderNotas};
+  (fns[state.view] || renderDashboard)(root);
+}
+
+/* =====================================================================
+   RENDER: DASHBOARD
+   ===================================================================== */
+function renderDashboard(root){
+  const tasks = trackedTasks();
+  const withEstado = tasks.map(t=>({t, estado:currentEstado(t)}));
+  const total = tasks.length;
+  const completado = withEstado.filter(x=>x.estado==="Completado").length;
+  const enProceso = withEstado.filter(x=>x.estado==="En proceso").length;
+  const enRevision = withEstado.filter(x=>x.estado==="Seguimiento").length;
+  const porHacer = withEstado.filter(x=>x.estado==="Por hacer").length;
+  const bloqueado = withEstado.filter(x=>x.estado==="Bloqueado").length;
+  const atrasadas = withEstado.filter(x=>isOverdue(x.t, x.estado)).length;
+  const avance = total ? Math.round((completado/total)*100) : 0;
+
+  let bannerClass = "", bannerTitle = "", bannerSub = "";
+  if(bloqueado>0 || atrasadas > total*0.15){
+    bannerClass="-risk"; bannerTitle="El proyecto necesita atención";
+    bannerSub = bloqueado>0 ? bloqueado+" tarea(s) bloqueada(s) y "+atrasadas+" atrasada(s)." : atrasadas+" tareas atrasadas sobre "+total+" totales.";
+  } else if(atrasadas>0){
+    bannerClass="-warn"; bannerTitle="En curso, con algunos pendientes";
+    bannerSub = atrasadas+" tarea(s) pasaron su fecha de cierre estimada.";
+  } else {
+    bannerClass=""; bannerTitle="En curso, buen ritmo";
+    bannerSub = "Sin bloqueos ni atrasos registrados hoy.";
+  }
+
+  const upcoming = withEstado.filter(x=>x.estado!=="Completado" && dueDateOf(x.t))
+    .sort((a,b)=> new Date(dueDateOf(a.t)) - new Date(dueDateOf(b.t))).slice(0,5);
+
+  root.innerHTML = `
+    <div class="view-head">
+      <div>
+        <h2 class="cond">Dashboard · Gulli ${"· "+tableroData().label}</h2>
+        <p class="sub">Resumen del tablero de ${tableroData().label}. Cambiá de tablero con los botones de arriba.</p>
+      </div>
+    </div>
+
+    <div class="status-banner ${bannerClass}"><span class="dot"></span>
+      <div class="txt"><b>${bannerTitle}</b><span>${bannerSub}</span></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi -accent"><span class="num mono-num">${avance}%</span><span class="lbl">Avance del proyecto</span></div>
+      <div class="kpi"><span class="num mono-num">${total}</span><span class="lbl">Tareas totales</span></div>
+      <div class="kpi"><span class="num mono-num">${completado}</span><span class="lbl">Finalizadas</span></div>
+      <div class="kpi"><span class="num mono-num">${enProceso}</span><span class="lbl">Proceso</span></div>
+      <div class="kpi"><span class="num mono-num">${porHacer}</span><span class="lbl">Pendientes</span></div>
+      <div class="kpi ${atrasadas>0?'-warn':''}"><span class="num mono-num">${atrasadas}</span><span class="lbl">Vencidas</span></div>
+    </div>
+
+    <div class="fase-row" id="fase-row"></div>
+
+    <div class="strategy-block">
+      <div class="obj-head">
+        <span class="micro">Objetivo · ${tableroData().label}</span>
+        <p>${OBJETIVO}</p>
+      </div>
+      <div class="prio-list">
+        ${PRIORIDADES.map(p=>`
+          <div class="prio-item">
+            <span class="n">Prioridad ${p.n}</span>
+            <h4>${p.tt}</h4>
+            <p>${p.desc}</p>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="view-head" style="margin-bottom:14px">
+      <h2 class="cond" style="font-size:24px">Próximos hitos</h2>
+    </div>
+    <div class="task-list" id="upcoming-list"></div>
+  `;
+
+  /* Tarjetas: avance por tema de la hoja (los 3 temas con más tareas). */
+  const faseRow = root.querySelector("#fase-row");
+  const porTema = {};
+  withEstado.forEach(x=>{ const g = grupoDe(x.t); (porTema[g] = porTema[g] || []).push(x); });
+  Object.keys(porTema)
+    .sort((a,b)=> porTema[b].length - porTema[a].length)
+    .slice(0,4)
+    .forEach(g=>{
+      const items = porTema[g];
+      const done = items.filter(x=>x.estado==="Completado").length;
+      const pct = items.length ? Math.round((done/items.length)*100) : 0;
+      const card = document.createElement("div");
+      card.className = "fase-card";
+      card.innerHTML = `
+        <span class="flabel">${escHtml(g)}</span>
+        <span class="fsub">Tema</span>
+        <div class="fase-bar"><i style="width:${pct}%"></i></div>
+        <div class="fase-nums"><span><b>${done}</b>/${items.length} listas</span><span><b>${pct}%</b></span></div>
+      `;
+      faseRow.appendChild(card);
+    });
+
+  const upcomingRoot = root.querySelector("#upcoming-list");
+  if(upcoming.length===0){
+    upcomingRoot.innerHTML = `<div class="empty-note">No hay próximos vencimientos con fecha cargada.</div>`;
+  } else {
+    upcoming.forEach(x=> upcomingRoot.appendChild(taskRow(x.t)));
+  }
+}
+
+/* =====================================================================
+   RENDER: PLAN DE TRABAJO
+   ===================================================================== */
+function renderFilterBar(root, opts){
+  opts = opts || {};
+  const wrap = document.createElement("div");
+  wrap.className = "filter-bar";
+  wrap.innerHTML = `
+    <div class="fgroup"><label>Tema</label>
+      <select data-f="tema">
+        <option value="">Todos</option>
+        ${gruposDelTablero(trackedTasks()).map(g=>`<option value="${escHtml(g)}">${escHtml(g)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="fgroup"><label>Estado</label>
+      <select data-f="estado">
+        <option value="">Todos</option>
+        ${ESTADOS.map(e=>`<option value="${e}">${estadoLabel(e)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="fgroup"><label>Responsable</label>
+      <select data-f="responsable">
+        <option value="">Todos</option>
+        ${allResponsables().map(r=>`<option value="${r}">${r}</option>`).join("")}
+        <option value="__none__">Sin asignar</option>
+      </select>
+    </div>
+    <div class="fgroup"><label>Prioridad</label>
+      <select data-f="prioridad">
+        <option value="">Todas</option>
+        <option value="Alta">Alta</option>
+        <option value="Media">Media</option>
+        <option value="Baja">Baja</option>
+      </select>
+    </div>
+    <button class="filter-clear">Limpiar filtros</button>
+  `;
+  wrap.querySelectorAll("select").forEach(sel=>{
+    const key = sel.dataset.f;
+    sel.value = state.filters[key];
+    sel.onchange = ()=>{ state.filters[key] = sel.value; render(); };
+  });
+  wrap.querySelector(".filter-clear").onclick = ()=>{ state.filters = {tema:"",estado:"",responsable:"",prioridad:""}; render(); };
+  root.appendChild(wrap);
+}
+
+function taskRow(t){
+  const row = document.createElement("div");
+  const estado = currentEstado(t);
+  const overdue = isOverdue(t, estado);
+  const link = taskLink(t);
+  row.className = "task-row" + (overdue ? " -overdue" : "");
+  const stClass = estadoClass(estado);
+  row.innerHTML = `
+    <div class="col-area"><span class="tk-tema">${t.area || "—"}</span></div>
+    <div class="col-tema"><span class="tk-tema">${t.tema || "—"}${t.subfase?" · "+t.subfase:""}</span></div>
+    <div class="col-tarea"><span class="tk-tarea">${t.tarea}${overdue?'<span class="tk-flags"><span class="flag">Vencida</span></span>':''}${t.source==="custom"&&!t.edited?'<span class="custom-tag">Nueva</span>':''}${link?' 🔗':''}</span></div>
+    <div class="col-resp"><span class="tk-resp">${respLabel(t.responsable)}</span></div>
+    <div class="col-dates">
+      <span><b>Inicio</b> ${fmtDate(t.inicio)}</span><br>
+      <span><b>Cierre</b> ${fmtDate(t.cierre || t.tiempo)}</span>
+    </div>
+    <div class="col-status">
+      <select class="status-select ${stClass}" data-task="${t.id}">
+        ${ESTADOS.map(e=>`<option value="${e}" ${e===estado?"selected":""}>${estadoLabel(e)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="col-observ"><span class="tk-obs">${t.obs || "—"}</span></div>
+    <div class="col-obs row-actions">
+      <button class="obs-btn" data-obs="${t.id}" aria-label="Editar tarea" title="Editar tarea">✎</button>
+    </div>
+  `;
+  const sel = row.querySelector("select");
+  // Recién creada y todavía guardándose en el Sheet: sin id definitivo no se puede editar.
+  if(String(t.id).startsWith("tmp")){
+    sel.disabled = true;
+    row.querySelector(".obs-btn").disabled = true;
+    row.querySelector(".tk-tarea").insertAdjacentHTML("beforeend", '<span class="custom-tag">Guardando…</span>');
+    return row;
+  }
+  sel.addEventListener("change", ()=>{
+    setEstado(t, sel.value);
+  });
+  row.querySelector(".obs-btn").addEventListener("click", ()=> openDetailModal(t));
+  row.classList.add("-editable");
+  row.addEventListener("click", (e)=>{
+    if(e.target.closest("select,button,a")) return;
+    openDetailModal(t);
+  });
+  return row;
+}
+
+function taskListHead(){
+  const head = document.createElement("div");
+  head.className = "task-row";
+  head.style.borderBottom = "2px solid var(--ink)";
+  head.style.paddingBottom = "8px";
+  head.innerHTML = `
+    <div class="micro">Área</div><div class="micro">Tema</div><div class="micro">Tarea</div><div class="micro">Responsable</div>
+    <div class="micro">Fechas</div><div class="micro">Estado</div><div class="micro">Observaciones</div><div></div>
+  `;
+  return head;
+}
+
+function renderPlan(root){
+  root.innerHTML = `<div class="view-head">
+      <div>
+        <h2 class="cond">Plan de trabajo · Gulli ${"· "+tableroData().label}</h2>
+        <p class="sub">Lo que falta hacer o está en proceso en ${tableroData().label}, agrupado por tema de la hoja. Tocá cualquier tarea para editarla. Al marcarla como Finalizada pasa a Finalizadas y se mueve en el Sheet. Sumá lo que aparezca con "+ Nueva tarea".</p>
+      </div>
+      <div class="actions"><a class="btn-secondary btn-link" href="${DRIVE_URL}" target="_blank" rel="noopener">Drive de trabajo ↗</a><button class="btn-primary" id="add-task-btn">+ Nueva tarea</button></div>
+    </div>`;
+  root.querySelector("#add-task-btn").addEventListener("click", openAddTaskModal);
+  renderTaskGroups(root, trackedTasks().filter(t=>currentEstado(t)!=="Completado"), "No hay tareas pendientes que coincidan con estos filtros.");
+}
+
+function renderFinalizadas(root){
+  root.innerHTML = `<div class="view-head">
+      <div>
+        <h2 class="cond">Finalizadas · Gulli ${"· "+tableroData().label}</h2>
+        <p class="sub">Tareas finalizadas de ${tableroData().label}, agrupadas por tema. Si una se reabre, cambiá su estado y vuelve al Plan de trabajo.</p>
+      </div>
+    </div>`;
+  renderTaskGroups(root, trackedTasks().filter(t=>currentEstado(t)==="Completado"), "No hay tareas finalizadas que coincidan con estos filtros.");
+}
+
+function renderTaskGroups(root, pool, emptyMsg){
+  renderFilterBar(root);
+  const tasks = applyFilters(pool);
+  const countEl = document.createElement("div");
+  countEl.className = "result-count";
+  countEl.textContent = tasks.length + " de " + pool.length + " tareas";
+  root.appendChild(countEl);
+
+  const list = document.createElement("div");
+  list.className = "task-list";
+  root.appendChild(list);
+
+  if(tasks.length===0){
+    list.innerHTML = `<div class="empty-note">${emptyMsg}</div>`;
+    return;
+  }
+
+  gruposDelTablero(tasks).forEach(g=>{
+    const enGrupo = tasks.filter(t=>grupoDe(t)===g).sort((a,b)=> (dueDateOf(a)||"9999").localeCompare(dueDateOf(b)||"9999"));
+    if(enGrupo.length===0) return;
+    const gh = document.createElement("div");
+    gh.className = "group-head";
+    const titulo = (g===SIN_TEMA && gruposDelTablero(tasks).length===1) ? tableroData().label : g;
+    gh.innerHTML = `<span class="swatch"></span><h3>${escHtml(titulo)}</h3><span class="count">${enGrupo.length} tareas</span>`;
+    list.appendChild(gh);
+    list.appendChild(taskListHead());
+    enGrupo.forEach(t=> list.appendChild(taskRow(t)));
+  });
+}
+
+/* =====================================================================
+   RENDER: TIMELINE
+   ===================================================================== */
+function renderTimeline(root){
+  root.innerHTML = `<div class="view-head"><div>
+      <h2 class="cond">Timeline · Gulli ${"· "+tableroData().label}</h2>
+      <p class="sub">Recorrido cronológico: reuniones y tareas con fecha del tablero de ${tableroData().label}.</p>
+    </div></div>`;
+
+  const items = [];
+  RAW.etapa1.forEach(e=> items.push({date:e.fecha, tt:e.tarea, meta:e.responsable+" · "+e.estado, done:true}));
+  trackedTasks().forEach(t=>{
+    const d = t.cierre || t.inicio;
+    if(!d) return;
+    const estado = currentEstado(t);
+    items.push({date:d, tt:t.tarea, meta:(t.tema||t.area)+" · "+respLabel(t.responsable)+" · "+estadoLabel(estado), done:estado==="Completado", overdue:isOverdue(t,estado)});
+  });
+  items.sort((a,b)=> a.date.localeCompare(b.date));
+
+  const byMonth = {};
+  items.forEach(it=>{
+    const d = new Date(it.date+"T00:00:00");
+    const key = d.toLocaleDateString("es-AR",{month:"long",year:"numeric"});
+    (byMonth[key] = byMonth[key]||[]).push(it);
+  });
+
+  Object.keys(byMonth).forEach(month=>{
+    const block = document.createElement("div");
+    block.className = "tl-month";
+    block.innerHTML = `<div class="tl-month-head">${month}</div>`;
+    byMonth[month].forEach(it=>{
+      const row = document.createElement("div");
+      row.className = "tl-item";
+      row.innerHTML = `
+        <div class="tl-date">${fmtDate(it.date)}</div>
+        <div class="tl-node"><i class="${it.done?'-done':(it.overdue?'-overdue':'')}"></i></div>
+        <div class="tl-body"><div class="tt">${it.tt}</div><div class="tm">${it.meta}</div></div>
+      `;
+      block.appendChild(row);
+    });
+    root.appendChild(block);
+  });
+}
+
+/* =====================================================================
+   RENDER: REUNIONES
+   ===================================================================== */
+/* Marca en rojo los campos obligatorios vacíos y dice cuáles faltan.
+   Antes el botón no hacía nada y parecía roto. Devuelve true si falta alguno. */
+function flagMissing(container, fields, anchor){
+  container.querySelectorAll(".form-error").forEach(e=>e.remove());
+  fields.forEach(([el])=>el.classList.toggle("-missing", !el.value.trim()));
+  const missing = fields.filter(([el])=>!el.value.trim());
+  if(!missing.length) return false;
+  const msg = document.createElement("div");
+  msg.className = "form-error";
+  msg.setAttribute("role", "alert");
+  msg.textContent = "Completá " + missing.map(([,label])=>label).join(" y ") + " para guardar.";
+  anchor.insertAdjacentElement("afterend", msg);
+  missing[0][0].focus();
+  missing.forEach(([el])=>el.addEventListener("input", ()=>el.classList.remove("-missing"), {once:true}));
+  return true;
+}
+
+function renderReuniones(root){
+  root.innerHTML = `<div class="view-head"><div>
+      <h2 class="cond">Reuniones · Gulli ${"· "+tableroData().label}</h2>
+      <p class="sub">Registro de cada encuentro de trabajo: fecha, quién participó, duración y qué se trató. Es el mismo para los tres tableros (hoja 01).</p>
+    </div></div>`;
+
+  const today = new Date().toISOString().slice(0,10);
+  const compose = document.createElement("div");
+  compose.className = "meeting-compose";
+  compose.innerHTML = `
+    <label class="micro" style="display:block;margin-bottom:10px">Registrar un encuentro</label>
+    <div class="field"><label class="flabel">Título</label><input type="text" id="mt-tarea" value="Encuentro I Estado del proceso de trabajo"></div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Fecha</label><input type="date" id="mt-fecha" value="${today}"></div>
+      <div class="field"><label class="flabel">Duración</label><input type="text" id="mt-duracion" value="2 hs" placeholder="Ej: 2 hs"></div>
+    </div>
+    <div class="field"><label class="flabel">Responsable / participantes</label>
+      <select id="mt-responsable">${optionsHtml(OPCIONES_REUNIONES.responsable && OPCIONES_REUNIONES.responsable.length ? OPCIONES_REUNIONES.responsable : ["Equipo"], "Equipo", "—")}</select>
+    </div>
+    <div class="field"><label class="flabel">Temas tratados / próximos pasos</label>
+      <textarea id="mt-resumen" placeholder="Ej: repasamos el lanzamiento de brand, quedó pendiente confirmar fecha con el cliente…"></textarea>
+    </div>
+    <button class="btn-primary" id="mt-submit">Guardar reunión</button>
+  `;
+  root.appendChild(compose);
+  compose.querySelector("#mt-submit").addEventListener("click", ()=>{
+    const fecha = compose.querySelector("#mt-fecha").value;
+    const duracion = compose.querySelector("#mt-duracion").value.trim();
+    const responsable = compose.querySelector("#mt-responsable").value.trim();
+    const resumen = compose.querySelector("#mt-resumen").value.trim();
+    if(flagMissing(compose, [[compose.querySelector("#mt-fecha"),"la fecha"],[compose.querySelector("#mt-resumen"),"los temas tratados"]], compose.querySelector("#mt-submit"))) return;
+    const tarea = compose.querySelector("#mt-tarea").value.trim();
+    addMeeting({fecha, duracion, responsable, resumen, tarea});
+    compose.querySelector("#mt-resumen").value = "";
+  });
+
+  const combined = [];
+  const live = sheetMode();
+  const hsLabel = hs => hs ? (/hs/i.test(String(hs)) ? hs : hs+" hs") : null;
+  RAW.etapa1.forEach(e=> combined.push({fecha:e.fecha, responsable:e.responsable, duracion:hsLabel(e.hs), resumen:e.tarea+(e.resultado?" — "+e.resultado:""), historical:!live, src:e}));
+  meetingsState.forEach(m=> combined.push(Object.assign({historical:false}, m)));
+  combined.sort((a,b)=> (b.fecha||"").localeCompare(a.fecha||"") || (b.createdAt||"").localeCompare(a.createdAt||""));
+
+  const log = document.createElement("div");
+  combined.forEach(m=>{
+    const item = document.createElement("div");
+    item.className = "meeting-item" + (m.historical ? " -historical" : "");
+    item.innerHTML = `
+      ${m.historical?"":'<button class="row-delete" aria-label="Eliminar reunión">&times;</button>'}
+      <div class="mhead">
+        <span class="mdate">${fmtDateLong(m.fecha)}</span>
+        <span class="mmeta">${m.duracion?m.duracion+" · ":""}${respLabel(m.responsable)}${m.historical?" · Etapa 1":""}</span>
+      </div>
+      <div class="mbody"></div>
+    `;
+    item.querySelector(".mbody").textContent = m.resumen || "";
+    if(!m.historical){
+      item.querySelector(".row-delete").addEventListener("click", ()=>{
+        if(!confirm("¿Eliminar esta reunión?")) return;
+        if(m.src) deleteSheetMeeting(m.src); else deleteMeeting(m.id);
+      });
+    }
+    log.appendChild(item);
+  });
+  root.appendChild(log);
+}
+
+/* =====================================================================
+   RENDER: ENTREGABLES
+   ===================================================================== */
+function renderEntregables(root){
+  root.innerHTML = `<div class="view-head"><div>
+      <h2 class="cond">Entregables · Gulli ${"· "+tableroData().label}</h2>
+      <p class="sub">Documentos, piezas y resultados generados por cada tarea, tomados de la columna de observaciones del plan.</p>
+    </div></div>`;
+
+  const withObs = trackedTasks().filter(t=>t.obs || taskLink(t)).sort((a,b)=> (dueDateOf(b)||"0").localeCompare(dueDateOf(a)||"0"));
+  const countEl = document.createElement("div");
+  countEl.className = "result-count";
+  countEl.textContent = withObs.length + " entregables registrados";
+  root.appendChild(countEl);
+
+  const grid = document.createElement("div");
+  grid.className = "deliv-grid";
+  root.appendChild(grid);
+
+  if(withObs.length===0){ grid.innerHTML = `<div class="empty-note">Todavía no hay entregables cargados.</div>`; return; }
+
+  withObs.forEach(t=>{
+    const estado = currentEstado(t);
+    const links = parseLinks(taskLink(t));
+    const row = document.createElement("div");
+    row.className = "deliv-row";
+    const nameHtml = links.length
+      ? `<a class="deliv-link" href="${toHref(links[0])}" target="_blank" rel="noopener">${t.obs || linkLabel(links[0])}</a>` +
+        links.slice(1).map((l,i)=>` · <a class="deliv-link" href="${toHref(l)}" target="_blank" rel="noopener">Link ${i+2}</a>`).join("")
+      : (t.obs || "—");
+    row.innerHTML = `
+      <div class="deliv-icon">E</div>
+      <div class="deliv-name">${nameHtml}</div>
+      <div class="deliv-task">${t.tarea}</div>
+      <div><span class="pill ${estadoClass(estado)}">${estadoLabel(estado)}</span></div>
+      <div class="col-dates"><b>${fmtDate(dueDateOf(t))}</b></div>
+    `;
+    grid.appendChild(row);
+  });
+}
+
+/* =====================================================================
+   RENDER: NOTAS
+   ===================================================================== */
+function renderNotas(root){
+  root.innerHTML = `<div class="view-head"><div>
+      <h2 class="cond">Notas · Gulli ${"· "+tableroData().label}</h2>
+      <p class="sub">Objetivo y prioridades de ${tableroData().label}, y bitácora de decisiones y observaciones del equipo.</p>
+    </div></div>`;
+
+  const grid = document.createElement("div");
+  grid.className = "notes-grid";
+  root.appendChild(grid);
+
+  const left = document.createElement("div");
+  left.innerHTML = `
+    <div class="strategy-block" style="margin-bottom:0">
+      <div class="obj-head"><span class="micro">Objetivo · ${tableroData().label}</span><p>${OBJETIVO}</p></div>
+      <div class="prio-list" style="grid-template-columns:1fr">
+        ${PRIORIDADES.map(p=>`<div class="prio-item" style="border-right:none;border-bottom:2px solid var(--ink)">
+            <span class="n">Prioridad ${p.n}</span><h4>${p.tt}</h4><p>${p.desc}</p>
+          </div>`).join("")}
+      </div>
+    </div>
+  `;
+  grid.appendChild(left);
+
+  const right = document.createElement("div");
+  right.innerHTML = `
+    <div class="note-compose">
+      <label class="micro" style="display:block;margin-bottom:8px">Agregar una nota</label>
+      <textarea id="note-text" placeholder="Ej: el cliente pidió mover el lanzamiento del brand una semana…"></textarea>
+      <div class="row">
+        <select id="note-author">${allResponsables().map(r=>`<option value="${r}">${r}</option>`).join("")}</select>
+        <button class="btn-primary" id="note-submit">Guardar nota</button>
+      </div>
+    </div>
+    <div id="notes-log"></div>
+  `;
+  grid.appendChild(right);
+
+  right.querySelector("#note-submit").addEventListener("click", ()=>{
+    const ta = right.querySelector("#note-text");
+    const author = right.querySelector("#note-author").value;
+    const text = ta.value.trim();
+    if(flagMissing(right, [[ta,"el texto de la nota"]], right.querySelector(".note-compose .row"))) return;
+    addNote(text, author);
+    ta.value = "";
+  });
+
+  const log = right.querySelector("#notes-log");
+  if(notesState.length===0){
+    log.innerHTML = `<div class="empty-note">Todavía no hay notas. Sé el primero en dejar una.</div>`;
+  } else {
+    notesState.forEach(n=>{
+      const d = new Date(n.createdAt);
+      const item = document.createElement("div");
+      item.className = "note-item";
+      item.innerHTML = `<button class="row-delete" aria-label="Eliminar nota">&times;</button><div class="who">${n.author} <span class="when">· ${d.toLocaleDateString("es-AR")} ${d.toLocaleTimeString("es-AR",{hour:'2-digit',minute:'2-digit'})}</span></div><p></p>`;
+      item.querySelector("p").textContent = n.text;
+      item.querySelector(".row-delete").addEventListener("click", ()=>{
+        if(confirm("¿Eliminar esta nota?")) deleteNote(n.id);
+      });
+      log.appendChild(item);
+    });
+  }
+}
+
+/* =====================================================================
+   MODAL DE DETALLE
+   ===================================================================== */
+function openDetailModal(t){
+  const backdrop = document.getElementById("modal");
+  const box = document.getElementById("modal-box");
+  const estado = currentEstado(t);
+  const link = taskLink(t);
+  const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  box.innerHTML = `
+    <button class="modal-close" aria-label="Cerrar">&times;</button>
+    <h3>Editar tarea</h3>
+    <div class="field"><label class="flabel">Tarea *</label><textarea id="ed-tarea" rows="2">${esc(t.tarea)}</textarea></div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Tema</label><input type="text" id="ed-tema" list="temas-tablero" value="${esc(t.tema)}" placeholder="Ej: Lista de precios">
+        <datalist id="temas-tablero">${temasDelSheet().map(g=>`<option value="${escHtml(g)}">`).join("")}</datalist>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Responsable</label>
+        <select id="ed-resp">${respSelectHtml(t.responsable)}</select>
+      </div>
+      <div class="field"><label class="flabel">Estado</label>
+        <select id="ed-estado">${ESTADOS.map(e=>`<option value="${e}" ${e===estado?"selected":""}>${estadoLabel(e)}</option>`).join("")}</select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Inicio</label><input type="date" id="ed-inicio" value="${t.inicio||""}"></div>
+      <div class="field"><label class="flabel">Cierre</label><input type="date" id="ed-cierre" value="${t.cierre||t.tiempo||""}"></div>
+    </div>
+    <div class="field"><label class="flabel">Observaciones / entregable</label><textarea id="ed-obs" rows="2">${esc(t.obs)}</textarea></div>
+    <div class="field">
+      <label class="flabel">Links del entregable (hasta 3: Drive, Docs, web…)</label>
+      ${[0,1,2].map(i=>`<input type="url" id="ed-link${i+1}" placeholder="https://… (link ${i+1})" value="${esc(parseLinks(link)[i]||"")}" style="margin-bottom:6px">`).join("")}
+      ${parseLinks(link).length?`<div style="margin-top:4px;display:flex;gap:14px;flex-wrap:wrap">${parseLinks(link).map((l,i)=>`<a class="entregable-link" href="${toHref(l)}" target="_blank" rel="noopener">Abrir link ${i+1} ↗</a>`).join("")}</div>`:""}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="ed-save">Guardar cambios</button>
+      <button class="btn-secondary" id="ed-cancel">Cancelar</button>
+      <button class="btn-secondary" id="task-duplicate">Duplicar</button>
+      <button class="btn-danger" id="task-delete">Eliminar tarea</button>
+    </div>
+  `;
+  box.querySelector(".modal-close").onclick = closeModal;
+  box.querySelector("#ed-cancel").onclick = closeModal;
+  wireRespSelect(box.querySelector("#ed-resp"));
+  /* Duplicar: abre "Nueva tarea" con los datos de esta, para editar la copia antes de guardarla. */
+  box.querySelector("#task-duplicate").onclick = ()=>{
+    openAddTaskModal({
+      tarea: t.tarea + " (copia)", tema: t.tema, responsable: t.responsable,
+      prioridad: t.prioridad, estado: estado, inicio: t.inicio, cierre: t.cierre || t.tiempo,
+      obs: t.obs, links: parseLinks(link),
+    });
+  };
+  box.querySelector("#ed-save").onclick = ()=>{
+    if(flagMissing(box, [[box.querySelector("#ed-tarea"),"el nombre de la tarea"]], box.querySelector(".modal-actions"))) return;
+    const val = id => box.querySelector(id).value.trim() || null;
+    const orig = {tarea:t.tarea, tema:t.tema, responsable:t.responsable, inicio:t.inicio, cierre:t.cierre||t.tiempo, obs:t.obs};
+    const inputs = {tarea:"#ed-tarea", tema:"#ed-tema", responsable:"#ed-resp", inicio:"#ed-inicio", cierre:"#ed-cierre", obs:"#ed-obs"};
+    const fields = {};
+    Object.keys(inputs).forEach(k=>{
+      const before = orig[k]==null ? null : (String(orig[k]).trim() || null);
+      const after = val(inputs[k]);
+      if(after!==before) fields[k] = after;
+    });
+    const nuevosLinks = joinLinks([1,2,3].map(n=>box.querySelector("#ed-link"+n).value));
+    if(nuevosLinks !== joinLinks(parseLinks(link))) fields.link = nuevosLinks;
+    const nuevoEstado = box.querySelector("#ed-estado").value;
+    if(nuevoEstado!==estado) fields.estado = nuevoEstado;
+    if(Object.keys(fields).length) saveTaskEdits(t, fields);
+    closeModal();
+  };
+  box.querySelector("#task-delete").onclick = ()=>{
+    if(!confirm("¿Eliminar esta tarea?")) return;
+    if(t.source==="custom") deleteCustomTask(t.id);
+    else if(sheetMode()) sheetDeleteTask(t);
+    else patchSeedOverride(t.id, {hidden:true});
+    closeModal();
+  };
+  abrirModal();
+}
+
+function openAddTaskModal(prefill){
+  // Con "prefill" es un duplicado; desde el botón llega el evento del clic, que se ignora.
+  const copia = prefill && typeof prefill.tarea === "string" ? prefill : null;
+  const backdrop = document.getElementById("modal");
+  const box = document.getElementById("modal-box");
+  box.innerHTML = `
+    <button class="modal-close" aria-label="Cerrar">&times;</button>
+    <h3>${copia ? "Duplicar tarea" : "Nueva tarea"}</h3>
+    <div class="field"><label class="flabel">Tarea *</label><input type="text" id="nt-tarea" placeholder="Ej: Armar propuesta de precios para nicho X"></div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Tema</label><input type="text" id="nt-tema" list="temas-tablero-nuevo" placeholder="Ej: Lista de precios">
+        <datalist id="temas-tablero-nuevo">${temasDelSheet().map(g=>`<option value="${escHtml(g)}">`).join("")}</datalist>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Responsable</label>
+        <select id="nt-resp">${respSelectHtml(copia ? copia.responsable : "")}</select>
+      </div>
+      <div class="field"><label class="flabel">Estado</label>
+        <select id="nt-estado">${ESTADOS.map(e=>`<option value="${e}">${estadoLabel(e)}</option>`).join("")}</select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="flabel">Inicio</label><input type="date" id="nt-inicio"></div>
+      <div class="field"><label class="flabel">Cierre</label><input type="date" id="nt-cierre"></div>
+    </div>
+    <div class="field"><label class="flabel">Observaciones (opcional)</label><input type="text" id="nt-obs"></div>
+    <div class="field"><label class="flabel">Links (opcional, hasta 3)</label>
+      ${[1,2,3].map(n=>`<input type="url" id="nt-link${n}" placeholder="https://… (link ${n})" style="margin-bottom:6px">`).join("")}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="nt-submit">${copia ? "Crear copia" : "Agregar tarea"}</button>
+      <button class="btn-secondary" id="nt-cancel">Cancelar</button>
+    </div>
+  `;
+  if(copia){
+    const set = (id, v)=>{ const el = box.querySelector(id); if(el && v!=null) el.value = v; };
+    set("#nt-tarea", copia.tarea);
+    set("#nt-tema", copia.tema);
+    set("#nt-resp", copia.responsable);
+    set("#nt-estado", copia.estado);
+    set("#nt-inicio", copia.inicio);
+    set("#nt-cierre", copia.cierre);
+    set("#nt-obs", copia.obs);
+    (copia.links||[]).forEach((l,i)=> set("#nt-link"+(i+1), l));
+  }
+  box.querySelector(".modal-close").onclick = closeModal;
+  box.querySelector("#nt-cancel").onclick = closeModal;
+  wireRespSelect(box.querySelector("#nt-resp"));
+  box.querySelector("#nt-submit").onclick = ()=>{
+    const tarea = box.querySelector("#nt-tarea").value.trim();
+    if(flagMissing(box, [[box.querySelector("#nt-tarea"),"el nombre de la tarea"]], box.querySelector(".modal-actions"))) return;
+    addCustomTask({
+      tarea,
+      tema: box.querySelector("#nt-tema").value.trim() || null,
+      responsable: box.querySelector("#nt-resp").value.trim() || null,
+      obs: box.querySelector("#nt-obs").value.trim() || null,
+      inicio: box.querySelector("#nt-inicio").value || null,
+      cierre: box.querySelector("#nt-cierre").value || null,
+      link: joinLinks([1,2,3].map(n=>box.querySelector("#nt-link"+n).value)),
+      estado: box.querySelector("#nt-estado").value,
+    });
+    closeModal();
+  };
+  abrirModal();
+}
+function closeModal(){ document.getElementById("modal").hidden = true; }
+
+/* La ventana ya no se cierra sola mientras se edita: un clic que empieza en un
+   campo y termina afuera, o Escape para cerrar un desplegable o una fecha, no
+   la cierran. Si se cierra desde afuera con cambios sin guardar, pregunta. */
+let modalInicial = "";
+let clicEmpezoEnFondo = false;
+function modalSnapshot(){
+  const box = document.getElementById("modal-box");
+  return [...box.querySelectorAll("input, select, textarea")].map(el=>el.value).join("\u0001");
+}
+function abrirModal(){
+  document.getElementById("modal").hidden = false;
+  modalInicial = modalSnapshot();
+}
+function cerrarSiNoHayCambios(){
+  if(document.getElementById("modal").hidden) return;
+  if(modalSnapshot()!==modalInicial && !confirm("Tenés cambios sin guardar. ¿Cerrar igual?")) return;
+  closeModal();
+}
+document.getElementById("modal").addEventListener("mousedown", (e)=>{ clicEmpezoEnFondo = e.target.id==="modal"; });
+document.getElementById("modal").addEventListener("click", (e)=>{
+  if(e.target.id==="modal" && clicEmpezoEnFondo) cerrarSiNoHayCambios();
+  clicEmpezoEnFondo = false;
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key!=="Escape") return;
+  if(e.target && /^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  cerrarSiNoHayCambios();
+});
+
+/* =====================================================================
+   EXPORTAR A EXCEL (backup .xlsx con el estado actual)
+   ===================================================================== */
+function buildExportRows(){
+  const planRows = trackedTasks().map(t=>{
+    const estado = currentEstado(t);
+    return {
+      "Tema del tablero": grupoDe(t),
+      "Área": t.area || "",
+      "Tema": t.tema || "",
+      "Tarea": t.tarea,
+      "Responsable": respLabel(t.responsable),
+      "Inicio": t.inicio || "",
+      "Cierre": t.cierre || t.tiempo || "",
+      "Estado": estadoLabel(estado),
+      "Prioridad": urgencia(t, estado),
+      "Vencida": isOverdue(t, estado) ? "Sí" : "No",
+      "Links": parseLinks(taskLink(t)).join(" | "),
+      "Entregable / Obs.": t.obs || "",
+    };
+  });
+  const etapa1Rows = RAW.etapa1.map(e=>({
+    "Fecha": e.fecha, "Tarea": e.tarea, "Responsable": e.responsable, "Estado": e.estado, "Resultado": e.resultado || "",
+  }));
+  const reunionRows = (meetingsState.length ? meetingsState : [{}]).map(m=>({
+    "Fecha": m.fecha || "", "Duración": m.duracion || "", "Responsable": m.responsable || "", "Resumen": m.resumen || "",
+  }));
+  const noteRows = (notesState.length ? notesState : [{}]).map(n=>({
+    "Fecha": n.createdAt ? new Date(n.createdAt).toLocaleString("es-AR") : "", "Autor": n.author || "", "Nota": n.text || "",
+  }));
+  return {planRows, etapa1Rows, reunionRows, noteRows};
+}
+
+async function exportToExcel(btn){
+  if(typeof XLSX === "undefined"){ alert("El generador de Excel todavía está cargando — probá de nuevo en unos segundos."); return; }
+  const original = btn.textContent;
+  btn.textContent = "Generando…"; btn.disabled = true;
+  try{
+    const {planRows, etapa1Rows, reunionRows, noteRows} = buildExportRows();
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(planRows), "Plan de trabajo");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(etapa1Rows), "Etapa 1 - Diagnostico");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reunionRows), "Reuniones");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(noteRows), "Notas");
+    const wbout = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+    const blob = new Blob([wbout], {type:"application/octet-stream"});
+    const filename = "Gulli " + tableroData().label + " - Plan de trabajo (backup " + new Date().toISOString().slice(0,10) + ").xlsx";
+    const downloads = (window.claude && typeof window.claude.use==="function") ? await window.claude.use("downloads") : null;
+    if(!downloads){ alert("La descarga no está disponible en esta vista."); return; }
+    await downloads.save({filename, data:blob});
+  }catch(e){
+    if(!e || e.code!=="declined"){ console.error(e); alert("No se pudo generar el archivo. Probá de nuevo."); }
+  }finally{
+    btn.textContent = original; btn.disabled = false;
+  }
+}
+document.getElementById("export-btn").addEventListener("click", (e)=> exportToExcel(e.currentTarget));
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+render();
+initStore();
+</script>
+
+
+</body>
+</html>
