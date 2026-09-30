@@ -433,12 +433,29 @@ function aplicarTablero_(){
   rebuildTasks_();
 }
 
-/* Los grupos del plan son los TEMAS de la hoja (la 03 no tiene, va en uno solo). */
-const SIN_TEMA = "Sin tema";
-function grupoDe(t){ return (t.tema && String(t.tema).trim()) || SIN_TEMA; }
+/* Los grupos del plan son las prioridades del trimestre (columna PRIORIDAD
+   de la hoja). Lo que todavía no tiene prioridad cargada va al final. */
+const SIN_PRIO = 0;
+function prioridadNum(t){
+  const m = String(t.prioridad||"").match(/[123]/);
+  return m ? Number(m[0]) : SIN_PRIO;
+}
+function prioridadLabel(n){
+  if(n===SIN_PRIO) return "Sin prioridad";
+  const p = (PRIORIDADES||[]).find(x=>Number(x.n)===n);
+  return "P"+n+(p && p.tt ? " · "+p.tt : "");
+}
 function gruposDelTablero(tasks){
+  const usados = [1,2,3].filter(n=> tasks.some(t=>prioridadNum(t)===n));
+  if(tasks.some(t=>prioridadNum(t)===SIN_PRIO)) usados.push(SIN_PRIO);
+  return usados.length ? usados : [SIN_PRIO];
+}
+/* Los temas siguen estando: sirven para filtrar y se ven en cada fila. */
+const SIN_TEMA = "Sin tema";
+function temaDe(t){ return (t.tema && String(t.tema).trim()) || SIN_TEMA; }
+function temasDelTablero(tasks){
   const set = [];
-  tasks.forEach(t=>{ const g = grupoDe(t); if(!set.includes(g)) set.push(g); });
+  tasks.forEach(t=>{ const g = temaDe(t); if(!set.includes(g)) set.push(g); });
   return set.sort((a,b)=> a===SIN_TEMA ? 1 : b===SIN_TEMA ? -1 : a.localeCompare(b));
 }
 
@@ -1153,7 +1170,7 @@ function trackedTasks(){
 function applyFilters(list){
   const f = state.filters;
   return list.filter(t=>{
-    if(f.tema!=="" && grupoDe(t)!==f.tema) return false;
+    if(f.tema!=="" && temaDe(t)!==f.tema) return false;
     if(f.estado!=="" && currentEstado(t)!==f.estado) return false;
     if(f.responsable!==""){
       if(f.responsable==="__none__"){ if(t.responsable) return false; }
@@ -1280,27 +1297,22 @@ function renderDashboard(root){
     <div class="task-list" id="upcoming-list"></div>
   `;
 
-  /* Tarjetas: avance por tema de la hoja (los 3 temas con más tareas). */
+  /* Tarjetas: avance por prioridad del trimestre. */
   const faseRow = root.querySelector("#fase-row");
-  const porTema = {};
-  withEstado.forEach(x=>{ const g = grupoDe(x.t); (porTema[g] = porTema[g] || []).push(x); });
-  Object.keys(porTema)
-    .sort((a,b)=> porTema[b].length - porTema[a].length)
-    .slice(0,4)
-    .forEach(g=>{
-      const items = porTema[g];
-      const done = items.filter(x=>x.estado==="Completado").length;
-      const pct = items.length ? Math.round((done/items.length)*100) : 0;
-      const card = document.createElement("div");
-      card.className = "fase-card";
-      card.innerHTML = `
-        <span class="flabel">${escHtml(g)}</span>
-        <span class="fsub">Tema</span>
-        <div class="fase-bar"><i style="width:${pct}%"></i></div>
-        <div class="fase-nums"><span><b>${done}</b>/${items.length} listas</span><span><b>${pct}%</b></span></div>
-      `;
-      faseRow.appendChild(card);
-    });
+  gruposDelTablero(withEstado.map(x=>x.t)).forEach(n=>{
+    const items = withEstado.filter(x=>prioridadNum(x.t)===n);
+    const done = items.filter(x=>x.estado==="Completado").length;
+    const pct = items.length ? Math.round((done/items.length)*100) : 0;
+    const card = document.createElement("div");
+    card.className = "fase-card";
+    card.innerHTML = `
+      <span class="flabel">${escHtml(prioridadLabel(n))}</span>
+      <span class="fsub">${n===SIN_PRIO ? "Falta asignarles prioridad" : "Prioridad "+n}</span>
+      <div class="fase-bar"><i style="width:${pct}%"></i></div>
+      <div class="fase-nums"><span><b>${done}</b>/${items.length} listas</span><span><b>${pct}%</b></span></div>
+    `;
+    faseRow.appendChild(card);
+  });
 
   const upcomingRoot = root.querySelector("#upcoming-list");
   if(upcoming.length===0){
@@ -1321,7 +1333,7 @@ function renderFilterBar(root, opts){
     <div class="fgroup"><label>Tema</label>
       <select data-f="tema">
         <option value="">Todos</option>
-        ${gruposDelTablero(trackedTasks()).map(g=>`<option value="${escHtml(g)}">${escHtml(g)}</option>`).join("")}
+        ${temasDelTablero(trackedTasks()).map(g=>`<option value="${escHtml(g)}">${escHtml(g)}</option>`).join("")}
       </select>
     </div>
     <div class="fgroup"><label>Estado</label>
@@ -1418,7 +1430,7 @@ function renderPlan(root){
   root.innerHTML = `<div class="view-head">
       <div>
         <h2 class="cond">Plan de trabajo · Gulli ${"· "+tableroData().label}</h2>
-        <p class="sub">Lo que falta hacer o está en proceso en ${tableroData().label}, agrupado por tema de la hoja. Tocá cualquier tarea para editarla. Al marcarla como Finalizada pasa a Finalizadas y se mueve en el Sheet. Sumá lo que aparezca con "+ Nueva tarea".</p>
+        <p class="sub">Lo que falta hacer o está en proceso en ${tableroData().label}, agrupado por la prioridad de cada tarea. Tocá cualquier tarea para editarla. Al marcarla como Finalizada pasa a Finalizadas y se mueve en el Sheet. Sumá lo que aparezca con "+ Nueva tarea".</p>
       </div>
       <div class="actions"><a class="btn-secondary btn-link" href="${DRIVE_URL}" target="_blank" rel="noopener">Drive de trabajo ↗</a><button class="btn-primary" id="add-task-btn">+ Nueva tarea</button></div>
     </div>`;
@@ -1430,7 +1442,7 @@ function renderFinalizadas(root){
   root.innerHTML = `<div class="view-head">
       <div>
         <h2 class="cond">Finalizadas · Gulli ${"· "+tableroData().label}</h2>
-        <p class="sub">Tareas finalizadas de ${tableroData().label}, agrupadas por tema. Si una se reabre, cambiá su estado y vuelve al Plan de trabajo.</p>
+        <p class="sub">Tareas finalizadas de ${tableroData().label}, agrupadas por prioridad. Si una se reabre, cambiá su estado y vuelve al Plan de trabajo.</p>
       </div>
     </div>`;
   renderTaskGroups(root, trackedTasks().filter(t=>currentEstado(t)==="Completado"), "No hay tareas finalizadas que coincidan con estos filtros.");
@@ -1453,13 +1465,12 @@ function renderTaskGroups(root, pool, emptyMsg){
     return;
   }
 
-  gruposDelTablero(tasks).forEach(g=>{
-    const enGrupo = tasks.filter(t=>grupoDe(t)===g).sort((a,b)=> (dueDateOf(a)||"9999").localeCompare(dueDateOf(b)||"9999"));
+  gruposDelTablero(tasks).forEach(n=>{
+    const enGrupo = tasks.filter(t=>prioridadNum(t)===n).sort((a,b)=> (dueDateOf(a)||"9999").localeCompare(dueDateOf(b)||"9999"));
     if(enGrupo.length===0) return;
     const gh = document.createElement("div");
     gh.className = "group-head";
-    const titulo = (g===SIN_TEMA && gruposDelTablero(tasks).length===1) ? tableroData().label : g;
-    gh.innerHTML = `<span class="swatch"></span><h3>${escHtml(titulo)}</h3><span class="count">${enGrupo.length} tareas</span>`;
+    gh.innerHTML = `<span class="swatch"></span><h3>${escHtml(prioridadLabel(n))}</h3><span class="count">${enGrupo.length} tareas</span>`;
     list.appendChild(gh);
     list.appendChild(taskListHead());
     enGrupo.forEach(t=> list.appendChild(taskRow(t)));
@@ -1719,6 +1730,9 @@ function openDetailModal(t){
     <h3>Editar tarea</h3>
     <div class="field"><label class="flabel">Tarea *</label><textarea id="ed-tarea" rows="2">${esc(t.tarea)}</textarea></div>
     <div class="field-row">
+      <div class="field"><label class="flabel">Prioridad</label>
+        <select id="ed-prio">${["","P1","P2","P3"].map(o=>`<option value="${o}" ${o===(t.prioridad||"")?"selected":""}>${o ? o+" · "+prioridadLabel(Number(o[1])).replace(/^P\d · /,"") : "Sin prioridad"}</option>`).join("")}</select>
+      </div>
       <div class="field"><label class="flabel">Tema</label><input type="text" id="ed-tema" list="temas-tablero" value="${esc(t.tema)}" placeholder="Ej: Lista de precios">
         <datalist id="temas-tablero">${temasDelSheet().map(g=>`<option value="${escHtml(g)}">`).join("")}</datalist>
       </div>
@@ -1754,7 +1768,7 @@ function openDetailModal(t){
   /* Duplicar: abre "Nueva tarea" con los datos de esta, para editar la copia antes de guardarla. */
   box.querySelector("#task-duplicate").onclick = ()=>{
     openAddTaskModal({
-      tarea: t.tarea + " (copia)", tema: t.tema, responsable: t.responsable,
+      tarea: t.tarea + " (copia)", prioridad: t.prioridad, tema: t.tema, responsable: t.responsable,
       prioridad: t.prioridad, estado: estado, inicio: t.inicio, cierre: t.cierre || t.tiempo,
       obs: t.obs, links: parseLinks(link),
     });
@@ -1762,8 +1776,8 @@ function openDetailModal(t){
   box.querySelector("#ed-save").onclick = ()=>{
     if(flagMissing(box, [[box.querySelector("#ed-tarea"),"el nombre de la tarea"]], box.querySelector(".modal-actions"))) return;
     const val = id => box.querySelector(id).value.trim() || null;
-    const orig = {tarea:t.tarea, tema:t.tema, responsable:t.responsable, inicio:t.inicio, cierre:t.cierre||t.tiempo, obs:t.obs};
-    const inputs = {tarea:"#ed-tarea", tema:"#ed-tema", responsable:"#ed-resp", inicio:"#ed-inicio", cierre:"#ed-cierre", obs:"#ed-obs"};
+    const orig = {prioridad:t.prioridad, tarea:t.tarea, tema:t.tema, responsable:t.responsable, inicio:t.inicio, cierre:t.cierre||t.tiempo, obs:t.obs};
+    const inputs = {prioridad:"#ed-prio", tarea:"#ed-tarea", tema:"#ed-tema", responsable:"#ed-resp", inicio:"#ed-inicio", cierre:"#ed-cierre", obs:"#ed-obs"};
     const fields = {};
     Object.keys(inputs).forEach(k=>{
       const before = orig[k]==null ? null : (String(orig[k]).trim() || null);
@@ -1797,6 +1811,9 @@ function openAddTaskModal(prefill){
     <h3>${copia ? "Duplicar tarea" : "Nueva tarea"}</h3>
     <div class="field"><label class="flabel">Tarea *</label><input type="text" id="nt-tarea" placeholder="Ej: Armar propuesta de precios para nicho X"></div>
     <div class="field-row">
+      <div class="field"><label class="flabel">Prioridad</label>
+        <select id="nt-prio">${["","P1","P2","P3"].map(o=>`<option value="${o}">${o ? o+" · "+prioridadLabel(Number(o[1])).replace(/^P\d · /,"") : "Sin prioridad"}</option>`).join("")}</select>
+      </div>
       <div class="field"><label class="flabel">Tema</label><input type="text" id="nt-tema" list="temas-tablero-nuevo" placeholder="Ej: Lista de precios">
         <datalist id="temas-tablero-nuevo">${temasDelSheet().map(g=>`<option value="${escHtml(g)}">`).join("")}</datalist>
       </div>
@@ -1826,6 +1843,7 @@ function openAddTaskModal(prefill){
     const set = (id, v)=>{ const el = box.querySelector(id); if(el && v!=null) el.value = v; };
     set("#nt-tarea", copia.tarea);
     set("#nt-tema", copia.tema);
+    if(copia.prioridad) set("#nt-prio", copia.prioridad);
     set("#nt-resp", copia.responsable);
     set("#nt-estado", copia.estado);
     set("#nt-inicio", copia.inicio);
@@ -1841,6 +1859,7 @@ function openAddTaskModal(prefill){
     if(flagMissing(box, [[box.querySelector("#nt-tarea"),"el nombre de la tarea"]], box.querySelector(".modal-actions"))) return;
     addCustomTask({
       tarea,
+      prioridad: box.querySelector("#nt-prio").value || null,
       tema: box.querySelector("#nt-tema").value.trim() || null,
       responsable: box.querySelector("#nt-resp").value.trim() || null,
       obs: box.querySelector("#nt-obs").value.trim() || null,
@@ -1891,7 +1910,7 @@ function buildExportRows(){
   const planRows = trackedTasks().map(t=>{
     const estado = currentEstado(t);
     return {
-      "Tema del tablero": grupoDe(t),
+      "Prioridad": t.prioridad || "",
       "Área": t.area || "",
       "Tema": t.tema || "",
       "Tarea": t.tarea,
