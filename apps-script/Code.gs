@@ -222,7 +222,8 @@ function setSafe_(cell, candidates) {
    Cada hoja tiene las suyas: 02 y 04 usan DEADLINE, 03 usa FIN; TEMA y
    FINALIZADO pueden no estar. Índices 0-based. */
 var NOMBRES_COL = {
-  "PRIORIDAD": "prioridad", "TEMA": "tema", "TAREA": "tarea", "RESPONSABLE": "responsable",
+  "PRIORIDAD": "prioridad", "PRIO": "prioridad", "P": "prioridad",
+  "TEMA": "tema", "TAREA": "tarea", "RESPONSABLE": "responsable",
   "INICIO": "inicio", "DEADLINE": "cierre", "FIN": "cierre", "CIERRE": "cierre",
   "FINALIZADO": "finalizado", "ESTADO": "estado", "OBSERVACIONES": "obs"
 };
@@ -294,31 +295,37 @@ function readTablero_(t) {
   if (finalizadasRow === -1) finalizadasRow = findLabelRow_(values, "FINALIZADOS");
 
   var objetivo = "";
-  if (objetivoRow !== -1) {
-    for (var o = objetivoRow + 1; o < Math.min(objetivoRow + 4, values.length); o++) {
-      var texto = primerTexto_(values[o]);
-      if (texto && texto.indexOf("¿") !== 0) { objetivo = texto; break; }
+  var desdeObj = objetivoRow !== -1 ? objetivoRow + 1 : 0;
+  var hastaObj = prioridadesRow !== -1 ? prioridadesRow : Math.min(desdeObj + 6, values.length);
+  for (var o = desdeObj; o < hastaObj; o++) {
+    var texto = primerTexto_(values[o]);
+    if (texto && texto.indexOf("¿") !== 0 && !/^(OBJETIVO|PRIORIDADES|INICIATIVAS)/i.test(texto)) {
+      objetivo = texto; break;
     }
   }
 
-  // Prioridades: filas numeradas 1..3 entre PRIORIDADES e INICIATIVAS.
-  // En Médicos hay además un bloque de KRs / Métricas: se saltea.
+  // Prioridades: filas numeradas 1..3. Si el rótulo PRIORIDADES no está
+  // (la hoja se reordena seguido), se buscan igual arriba de la tabla.
   var prioridades = [];
-  if (prioridadesRow !== -1) {
-    var finPrio = iniciativasRow === -1 ? values.length : iniciativasRow;
-    for (var pr = prioridadesRow + 1; pr < finPrio; pr++) {
+  var desdePrio = prioridadesRow !== -1 ? prioridadesRow + 1 : 0;
+  {
+    var finPrio = iniciativasRow !== -1 ? iniciativasRow : C.header;
+    for (var pr = desdePrio; pr < finPrio; pr++) {
       var n = null, texto2 = null;
       for (var c2 = 0; c2 < Math.min(values[pr].length, 6); c2++) {
         var val = cell_(values[pr], c2);
         if (val === null) continue;
-        if (n === null && typeof val === "number" && val >= 1 && val <= 9) { n = val; continue; }
-        if (n !== null && texto2 === null && typeof val === "string") { texto2 = val; break; }
+        var num = typeof val === "number" ? val : Number(String(val).replace(/[.)]/g, "").trim());
+        if (n === null && !isNaN(num) && num >= 1 && num <= 9 && String(val).length <= 3) { n = num; continue; }
+        if (n !== null && texto2 === null) { texto2 = String(val).trim(); break; }
       }
-      if (n === null || !texto2) continue;
-      if (/^KRs|^%|M[ée]tricas/i.test(texto2)) break; // arranca el bloque de métricas
+      if (n === null || !texto2 || texto2.length < 8) continue;
+      if (/^KRs|^%|M[ée]tricas/i.test(texto2)) continue; // bloque de métricas: no es prioridad
+      if (prioridades.some(function (x) { return Number(x.n) === Number(n); })) continue;
       prioridades.push({ n: n, tt: texto2, desc: "" });
       if (prioridades.length === 3) break;
     }
+    prioridades.sort(function (a, b) { return Number(a.n) - Number(b.n); });
   }
 
   var iniciativas = [], finalizados = [];
