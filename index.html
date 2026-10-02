@@ -151,6 +151,9 @@ a{color:inherit}
 .group-head h3{font-size:19px;text-transform:uppercase;letter-spacing:-.01em}
 .group-head .count{font-size:12px;color:var(--muted);font-weight:700}
 .group-head .swatch{width:14px;height:14px;flex:none;background:var(--signal)}
+.task-row .col-area{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.tk-prio{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border:1.5px solid var(--ink);color:var(--ink)}
+.tk-prio.-sin{border-color:var(--rule);color:var(--muted)}
 .group-head .gh-prog{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--muted)}
 .group-head .gh-prog .bar{width:120px;height:8px;background:var(--paper);border:1.5px solid var(--ink);overflow:hidden}
 .group-head .gh-prog .bar i{display:block;height:100%;background:var(--signal)}
@@ -1401,7 +1404,9 @@ function taskRow(t){
   row.className = "task-row" + (overdue ? " -overdue" : "");
   const stClass = estadoClass(estado);
   row.innerHTML = `
-    <div class="col-area"><span class="tk-tema">${t.area || "—"}</span></div>
+    <div class="col-area">${t.source==="etapa1" ? '<span class="tk-tema">—</span>'
+      : prioridadNum(t) ? `<span class="tk-prio">P${prioridadNum(t)}</span>`
+      : '<span class="tk-prio -sin">Sin prioridad</span>'}</div>
     <div class="col-tema"><span class="tk-tema">${t.tema || "—"}${t.subfase?" · "+t.subfase:""}</span></div>
     <div class="col-tarea"><span class="tk-tarea">${t.tarea}${overdue?'<span class="tk-flags"><span class="flag">Vencida</span></span>':''}${t.source==="custom"&&!t.edited?'<span class="custom-tag">Nueva</span>':''}${link?' 🔗':''}</span></div>
     <div class="col-resp"><span class="tk-resp">${respLabel(t.responsable)}</span></div>
@@ -1445,7 +1450,7 @@ function taskListHead(){
   head.style.borderBottom = "2px solid var(--ink)";
   head.style.paddingBottom = "8px";
   head.innerHTML = `
-    <div class="micro">Área</div><div class="micro">Tema</div><div class="micro">Tarea</div><div class="micro">Responsable</div>
+    <div class="micro">Prioridad</div><div class="micro">Tema</div><div class="micro">Tarea</div><div class="micro">Responsable</div>
     <div class="micro">Fechas</div><div class="micro">Estado</div><div class="micro">Observaciones</div><div></div>
   `;
   return head;
