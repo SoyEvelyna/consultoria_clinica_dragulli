@@ -776,7 +776,10 @@ async function sheetWrite(action, payload){
     return res;
   }).catch(e=>{
     console.error(e);
-    if(!e.soft) alert("No se pudo guardar en el Sheet: " + e.message);
+    // Si no se pudo guardar y el cambio se puede repetir, vuelve a la cola:
+    // se reintenta solo en la próxima visita, así no se pierde.
+    if(ACCIONES_REPETIBLES.includes(action)) guardarPendientes(leerPendientes().concat([item]));
+    if(!e.soft) alert("No se pudo guardar en el Sheet: " + e.message + "\n\nQueda en cola y se reintenta solo.");
   });
   sheetQueue = job;
   await job;
@@ -981,7 +984,27 @@ async function gasRefresh_(){
 
 /* Content-Type por defecto (text/plain) a propósito: evita el preflight
    CORS, que los Web Apps de Apps Script no responden. */
+/* Acciones que se pueden repetir sin duplicar nada: solo esas se reintentan. */
+const ACCIONES_REPETIBLES = ["updateTask","setOverride","deleteTask","deleteNote","deleteMeetingSheet"];
+
+/* Google a veces devuelve una página de error o un cuerpo vacío. Cuando el
+   cuerpo llega vacío el backend ve un POST sin token y contesta "token
+   inválido", aunque el token esté bien. Reintentar alcanza. */
 async function gasWrite_(action, payload){
+  const intentos = ACCIONES_REPETIBLES.includes(action) ? 3 : 1;
+  let ultimo = null;
+  for(let i=1; i<=intentos; i++){
+    try{ return await gasWriteUna_(action, payload); }
+    catch(e){
+      ultimo = e;
+      if(i===intentos || !e.reintentable) break;
+      await new Promise(r=>setTimeout(r, 1200*i));
+    }
+  }
+  throw ultimo;
+}
+
+async function gasWriteUna_(action, payload){
   const ctrl = new AbortController();
   const timer = setTimeout(()=>ctrl.abort(), 45000);
   let res;
@@ -995,6 +1018,7 @@ async function gasWrite_(action, payload){
     // Sin respuesta: el cambio pudo guardarse igual; la relectura muestra lo que quedó.
     const err = new Error("sin respuesta de Google en "+action);
     err.soft = true;
+    err.reintentable = true;
     throw err;
   }finally{
     clearTimeout(timer);
@@ -1005,9 +1029,15 @@ async function gasWrite_(action, payload){
   catch(e){
     const err = new Error("respuesta no válida de Google en "+action);
     err.soft = true;
+    err.reintentable = true;
     throw err;
   }
-  if(!json.ok) throw new Error(json.error || ("error en "+action));
+  if(!json.ok){
+    const err = new Error(json.error || ("error en "+action));
+    // Cuerpo vacío del lado de Google: el backend no vio el token. Se reintenta.
+    if(/token inválido/i.test(err.message)) err.reintentable = true;
+    throw err;
+  }
   return json.result;
 }
 
