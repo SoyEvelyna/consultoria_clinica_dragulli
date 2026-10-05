@@ -750,6 +750,13 @@ function updateSyncLabel(){
 }
 
 async function sheetWrite(action, payload){
+  /* La hoja tiene sus propias palabras para el estado. Si se le manda el
+     nombre interno ("Por hacer"), su desplegable lo rechaza y el estado
+     termina anotado en Observaciones en vez de en su columna. */
+  if(payload && payload.fields && payload.fields.estado){
+    payload = Object.assign({}, payload, {fields: Object.assign({}, payload.fields,
+      {estado: ESTADO_A_SHEET[payload.fields.estado] || payload.fields.estado})});
+  }
   const item = {id: "p" + Date.now() + Math.random().toString(36).slice(2,6), action, payload};
   guardarPendientes(leerPendientes().concat([item]));
   sheetPending++;
