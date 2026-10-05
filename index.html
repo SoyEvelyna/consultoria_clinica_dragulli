@@ -523,8 +523,13 @@ function temasDelSheet(){
   return Array.from(set).sort((a,b)=>a.localeCompare(b));
 }
 function allResponsables(){
-  const base = SHEET_OPCIONES.responsable && SHEET_OPCIONES.responsable.length ? SHEET_OPCIONES.responsable : RESPONSABLES;
-  const set = new Set(base);
+  /* Si la hoja tiene su propio desplegable, se ofrece exactamente eso: un
+     nombre que no esté en su lista lo rechaza al guardar y termina anotado
+     en Observaciones. Para sumar a alguien se lo agrega en la hoja. */
+  if(SHEET_OPCIONES.responsable && SHEET_OPCIONES.responsable.length){
+    return SHEET_OPCIONES.responsable.slice();
+  }
+  const set = new Set(RESPONSABLES);
   TASKS.forEach(t=>{ if(t.responsable && t.source!=="etapa1") set.add(t.responsable); });
   customTasksState.forEach(c=>{ if(c.responsable) set.add(c.responsable); });
   return Array.from(set);
