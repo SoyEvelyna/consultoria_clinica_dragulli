@@ -24,9 +24,72 @@
 /* Para ejecutar a mano desde el editor (el menú no muestra funciones con "_").
    Van primero porque el editor corre la primera función del archivo. */
 function verTableros() { Logger.log(JSON.stringify(diagnostico_(), null, 2)); }
+
+/* Suma una prioridad al trimestre de un tablero (por ejemplo una campaña
+   puntual). Se edita NUEVA_PRIORIDAD y se ejecuta agregarPrioridad(): escribe
+   la fila en el bloque PRIORIDADES de la hoja y suma la etiqueta al
+   desplegable de la columna PRIORIDAD. */
+var NUEVA_PRIORIDAD = { tablero: "admin", texto: "DÍA DE LA MADRE" };
+
+function agregarPrioridad() {
+  var t = tablero_(NUEVA_PRIORIDAD.tablero);
+  var sheet = hojaPorPrefijo_(t.prefijo);
+  var values = sheet.getDataRange().getValues();
+  var C = colsProceso_(values);
+  var prioridadesRow = findLabelRow_(values, "PRIORIDADES");
+  var iniciativasRow = findLabelRow_(values, "INICIATIVAS");
+  var fin = iniciativasRow !== -1 ? iniciativasRow : C.header;
+
+  /* La última fila numerada del bloque, y en qué columnas van número y texto. */
+  var ultima = -1, ultimoN = 0, colN = -1, colTexto = -1;
+  for (var r = (prioridadesRow !== -1 ? prioridadesRow + 1 : 0); r < fin; r++) {
+    var n = null, cN = -1, cT = -1;
+    for (var c = 0; c < Math.min(values[r].length, 6); c++) {
+      var val = cell_(values[r], c);
+      if (val === null) continue;
+      var num = typeof val === "number" ? val : Number(String(val).replace(/[.)]/g, "").trim());
+      if (n === null && !isNaN(num) && num >= 1 && num <= 9 && String(val).length <= 3) { n = num; cN = c; continue; }
+      if (n !== null && cT === -1) { cT = c; break; }
+    }
+    if (n === null || cT === -1) continue;
+    if (n > ultimoN) { ultimoN = n; ultima = r; colN = cN; colTexto = cT; }
+  }
+  if (ultima === -1) throw new Error("No encuentro el bloque de prioridades en " + sheet.getName());
+  if (ultimoN >= MAX_PRIORIDADES) throw new Error("Ya hay " + ultimoN + " prioridades; subí MAX_PRIORIDADES");
+
+  var filaOrigen = ultima + 1;
+  var filaNueva = filaOrigen + 1;
+  var ancho = Math.max(sheet.getLastColumn(), colTexto + 1);
+  sheet.insertRowAfter(filaOrigen);
+  sheet.getRange(filaOrigen, 1, 1, ancho).copyTo(sheet.getRange(filaNueva, 1, 1, ancho), { formatOnly: true });
+
+  /* El texto de la prioridad vive en celdas combinadas: se repite el combinado. */
+  sheet.getRange(filaOrigen, 1, 1, ancho).getMergedRanges().forEach(function (m) {
+    if (m.getNumRows() !== 1) return;
+    sheet.getRange(filaNueva, m.getColumn(), 1, m.getNumColumns()).merge();
+  });
+
+  sheet.getRange(filaNueva, colN + 1).setValue(ultimoN + 1);
+  sheet.getRange(filaNueva, colTexto + 1).setValue(NUEVA_PRIORIDAD.texto);
+
+  /* La columna PRIORIDAD ofrece ahora también la nueva etiqueta. */
+  var etiquetas = [];
+  for (var i = 1; i <= ultimoN + 1; i++) etiquetas.push("P" + i);
+  if (C.prioridad !== undefined) {
+    var desde = C.header + 3; // el encabezado bajó una fila al insertar
+    var regla = SpreadsheetApp.newDataValidation()
+      .requireValueInList(etiquetas, true).setAllowInvalid(true).build();
+    sheet.getRange(desde, C.prioridad + 1, Math.max(sheet.getMaxRows() - desde + 1, 1), 1).setDataValidation(regla);
+  }
+  Logger.log(JSON.stringify({ hoja: sheet.getName(), fila: filaNueva, n: ultimoN + 1,
+    texto: NUEVA_PRIORIDAD.texto, opciones: etiquetas }));
+}
 function quienEnvia() { Logger.log(JSON.stringify({ efectivo: Session.getEffectiveUser().getEmail() })); }
 
 var ACCESS_TOKEN = "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu";
+
+/* Cuántas prioridades por trimestre admite un tablero. */
+var MAX_PRIORIDADES = 6;
 
 /* Id del Google Sheet "Evelyna I CONSULTORÍA: Dra. Daniela Gulli". */
 var SHEET_ID = "1fz9FefdaKjy3MRH371d7hjIdxiFryatsAIqwgAaVj4o";
@@ -323,7 +386,7 @@ function readTablero_(t) {
       if (/^KRs|^%|M[ée]tricas/i.test(texto2)) continue; // bloque de métricas: no es prioridad
       if (prioridades.some(function (x) { return Number(x.n) === Number(n); })) continue;
       prioridades.push({ n: n, tt: texto2, desc: "" });
-      if (prioridades.length === 3) break;
+      if (prioridades.length === MAX_PRIORIDADES) break;
     }
     prioridades.sort(function (a, b) { return Number(a.n) - Number(b.n); });
   }
