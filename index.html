@@ -628,6 +628,33 @@ function mk(base, source){
   return Object.assign({id, source, estadoOriginal}, base);
 }
 let TASKS = [];
+/* Lo que se acaba de editar, guardado unos minutos. La relectura del Sheet a
+   veces llega atrasada (Google responde lento o devuelve una copia vieja) y
+   sin esto el cambio se ve volver atrás solo. Se indexa por tema+tarea porque
+   el id cambia cuando la tarea pasa a Finalizadas. */
+const RECIENTES_MS = 3 * 60 * 1000;
+const recientes = new Map();
+function claveTarea_(t){ return String(t.tema||"") + "|" + String(t.tarea||""); }
+function recordarCambio_(t, fields){
+  const previo = recientes.get(claveTarea_(t));
+  recientes.set(claveTarea_(t), {fields: Object.assign({}, previo && previo.fields, fields), ts: Date.now()});
+}
+function aplicarRecientes_(){
+  const ahora = Date.now();
+  recientes.forEach((v, k)=>{ if(ahora - v.ts > RECIENTES_MS) recientes.delete(k); });
+  if(!recientes.size) return;
+  TASKS.forEach(t=>{
+    if(t.source==="etapa1") return;
+    const r = recientes.get(claveTarea_(t));
+    if(!r) return;
+    Object.keys(r.fields).forEach(k=>{
+      if(r.fields[k]===undefined) return;
+      t[k] = r.fields[k];
+      if(k==="estado") t.estadoOriginal = ESTADO_A_SHEET[r.fields[k]] || r.fields[k];
+    });
+  });
+}
+
 function rebuildTasks_(){
   idSeen = {};
   TASKS = [];
@@ -648,6 +675,7 @@ function rebuildTasks_(){
     const tarea = tema ? (tema+" — "+descClean) : descClean;
     TASKS.push(mk({area, tema, tarea, subfase, responsable:null, inicio:null, tiempo:null, cierre:null, estado:null, obs:null}, "backlog"));
   });
+  aplicarRecientes_();
 }
 aplicarTablero_(); // vuelca el tablero activo en RAW y construye TASKS
 
@@ -800,6 +828,7 @@ window.addEventListener("beforeunload", (e)=>{
 });
 
 function sheetTaskEdit(t, fields){
+  recordarCambio_(t, fields);
   const local = TASKS.find(x=>x.id===t.id);
   if(local){
     Object.assign(local, fields);
