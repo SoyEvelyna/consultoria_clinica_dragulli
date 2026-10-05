@@ -394,6 +394,10 @@ a.deliv-link:hover,a.entregable-link:hover{color:var(--hazard);text-decoration-c
      incluidos en este archivo — no se rompe nada por dejarlo así.
      ============================================================ -->
 <script>
+  /* Sello de la versión publicada. GitHub Pages cachea el HTML y el navegador
+     se queda con una copia vieja: la página compara este sello contra el del
+     servidor y, si quedó atrás, se recarga sola una vez. */
+  window.APP_VERSION = "20261005-1427";
   window.GULLI_GAS_CONFIG = {
     url: "https://script.google.com/macros/s/AKfycby6AGbv4jm4CFW5X0Tgt8w6ygOghZeoV2woaL8rb-tketHRvTeVW9H3DtfMvzsWY8OD/exec",
     token: "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu"
@@ -1024,6 +1028,21 @@ const ACCIONES_REPETIBLES = ["updateTask","setOverride","deleteTask","deleteNote
 /* Google a veces devuelve una página de error o un cuerpo vacío. Cuando el
    cuerpo llega vacío el backend ve un POST sin token y contesta "token
    inválido", aunque el token esté bien. Reintentar alcanza. */
+/* Si el navegador sirvió una copia vieja de la página, se recarga una sola
+   vez por versión nueva. Sin esto los arreglos publicados no llegan hasta que
+   alguien hace un refresco forzado. */
+async function chequearVersion_(){
+  try{
+    const r = await fetch(location.pathname + "?ts=" + Date.now(), {cache: "no-store"});
+    const txt = await r.text();
+    const m = txt.match(/window\.APP_VERSION = "([^"]+)"/);
+    if(!m || m[1] === window.APP_VERSION) return;
+    if(sessionStorage.getItem("gulli-version-recargada") === m[1]) return;
+    sessionStorage.setItem("gulli-version-recargada", m[1]);
+    location.reload();
+  }catch(e){}
+}
+
 async function gasWrite_(action, payload){
   const intentos = ACCIONES_REPETIBLES.includes(action) ? 3 : 1;
   let ultimo = null;
@@ -1157,6 +1176,7 @@ async function initSheetStore_(){
   notesCol = gasCollection_("notes");
   customCol = gasCollection_("customTasks");
   meetingsCol = gasCollection_("meetings");
+  chequearVersion_();
   // Cambios que quedaron sin enviar en una visita anterior.
   const previos = leerPendientes();
   if(previos.length){
