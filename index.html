@@ -397,7 +397,7 @@ a.deliv-link:hover,a.entregable-link:hover{color:var(--hazard);text-decoration-c
   /* Sello de la versión publicada. GitHub Pages cachea el HTML y el navegador
      se queda con una copia vieja: la página compara este sello contra el del
      servidor y, si quedó atrás, se recarga sola una vez. */
-  window.APP_VERSION = "20261005-1427";
+  window.APP_VERSION = "20261005-1505";
   window.GULLI_GAS_CONFIG = {
     url: "https://script.google.com/macros/s/AKfycby6AGbv4jm4CFW5X0Tgt8w6ygOghZeoV2woaL8rb-tketHRvTeVW9H3DtfMvzsWY8OD/exec",
     token: "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu"
@@ -803,7 +803,17 @@ async function sheetWrite(action, payload){
     if(!gasData) await firstRead;
     // Se saca de pendientes justo antes de enviarlo, para no mandarlo dos veces.
     guardarPendientes(leerPendientes().filter(x=>x.id!==item.id));
-    const res = await gasWrite_(action, payload);
+    let res;
+    try{
+      res = await gasWrite_(action, payload);
+    }catch(e){
+      if(esIdViejo_(e) && payload && payload.id){
+        res = await reintentarConIdNuevo_(action, payload);
+      } else if((e.soft || e.reintentable) && (action === "addTask" || action === "addMeetingSheet")){
+        res = await reintentarAlta_(action, payload);
+      }
+      if(!res) throw e;
+    }
     // Un desplegable de la hoja puede rechazar un valor (ej. un Área que no está
     // en su lista). El resto se guarda igual y eso queda anotado en Observaciones.
     if(res && res.enObservaciones && res.enObservaciones.length){
@@ -813,10 +823,17 @@ async function sheetWrite(action, payload){
     return res;
   }).catch(e=>{
     console.error(e);
-    // Si no se pudo guardar y el cambio se puede repetir, vuelve a la cola:
-    // se reintenta solo en la próxima visita, así no se pierde.
-    if(ACCIONES_REPETIBLES.includes(action)) guardarPendientes(leerPendientes().concat([item]));
-    if(!e.soft) alert("No se pudo guardar en el Sheet: " + e.message + "\n\nQueda en cola y se reintenta solo.");
+    // Solo vuelve a la cola lo que puede andar en otro momento. Un error
+    // definitivo (la tarea ya no existe) repetido en cada visita sería un
+    // cartel eterno que no arregla nada.
+    const transitorio = !!(e.soft || e.reintentable);
+    if(transitorio && ACCIONES_REPETIBLES.includes(action)){
+      guardarPendientes(leerPendientes().concat([item]));
+    }
+    if(!e.soft){
+      alert("No se pudo guardar en el Sheet: " + e.message +
+        (transitorio ? "\n\nQueda en cola y se reintenta solo." : ""));
+    }
   });
   sheetQueue = job;
   await job;
@@ -1041,6 +1058,41 @@ async function chequearVersion_(){
     sessionStorage.setItem("gulli-version-recargada", m[1]);
     location.reload();
   }catch(e){}
+}
+
+/* Los ids se calculan del contenido de la fila, así que cambian si alguien
+   edita el texto de la tarea o la mueve. Cuando el backend dice que no la
+   encuentra, se relee la hoja y se reintenta una sola vez con el id nuevo de
+   esa misma tarea, en vez de hacerle repetir el cambio a mano. */
+function esIdViejo_(e){ return /No encuentro esa tarea/i.test(String(e && e.message || "")); }
+
+async function reintentarConIdNuevo_(action, payload){
+  const anterior = TASKS.find(x=>x.id===payload.id);
+  const clave = anterior ? claveTarea_(anterior) : null;
+  try{ await gasRefresh_(); }catch(e){ return null; }
+  if(!clave) return null;
+  const ahora = TASKS.find(x=>x.source!=="etapa1" && claveTarea_(x)===clave);
+  if(!ahora || ahora.id===payload.id) return null;
+  return gasWrite_(action, Object.assign({}, payload, {id: ahora.id}));
+}
+
+/* Crear no se puede repetir a ciegas: duplicaría la fila. Cuando el alta se
+   corta a mitad de camino (Google lento o sin respuesta) se relee la hoja y
+   se mira si quedó cargada; recién si no está, se vuelve a mandar. */
+async function reintentarAlta_(action, payload){
+  try{ await gasRefresh_(); }catch(e){ return null; }
+  if(action === "addTask"){
+    const f = payload.fields || {};
+    const ya = TASKS.some(t=> (t.source==="iniciativa" || t.source==="finalizado")
+      && String(t.tema||"") === String(f.tema||"") && String(t.tarea||"") === String(f.tarea||""));
+    return ya ? {yaEstaba:true} : gasWrite_(action, payload);
+  }
+  if(action === "addMeetingSheet"){
+    const ya = (RAW.etapa1||[]).some(m=> m.fecha === payload.fecha
+      && String(m.resultado||"") === String(payload.resumen||""));
+    return ya ? {yaEstaba:true} : gasWrite_(action, payload);
+  }
+  return null;
 }
 
 async function gasWrite_(action, payload){
