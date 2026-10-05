@@ -31,6 +31,42 @@ function verTableros() { Logger.log(JSON.stringify(diagnostico_(), null, 2)); }
    desplegable de la columna PRIORIDAD. */
 var NUEVA_PRIORIDAD = { tablero: "admin", texto: "DÍA DE LA MADRE" };
 
+/* Unifica el desplegable de RESPONSABLE de un tablero: toma los nombres que
+   ya ofrece la hoja más todos los que están efectivamente usados en la
+   columna, y aplica esa única lista a toda la columna de tareas. Hace falta
+   porque quedaron filas con reglas más angostas que la realidad: nombres como
+   Ailén o Dani estaban escritos en celdas pero el desplegable los rechazaba,
+   así que al asignarlos desde la web terminaban en OBSERVACIONES. */
+function unificarResponsables() {
+  var resumen = TABLEROS.map(function (t) {
+    var L = procesoLayout_(t.id);
+    if (L.C.responsable === undefined) return { tablero: t.id, error: "sin columna RESPONSABLE" };
+    var col = L.C.responsable + 1;
+    var nombres = [], vistos = {};
+    function sumar(v) {
+      var x = String(v === null || v === undefined ? "" : v).trim();
+      if (!x || vistos[norm_(x)]) return;
+      vistos[norm_(x)] = true;
+      nombres.push(x);
+    }
+    L.tasks.forEach(function (task) {
+      dropdownValues_(L.sheet.getRange(task.row, col)).forEach(sumar);
+      sumar(L.sheet.getRange(task.row, col).getValue());
+    });
+    if (!nombres.length) return { tablero: t.id, error: "no encontré nombres" };
+    ["Anto/Caro", "Caro/Anto"].forEach(sumar);
+    nombres.sort(function (a, b) { return a.localeCompare(b); });
+    /* setAllowInvalid(true): la lista sugiere, no bloquea. Si se elige una
+       combinación que no está, igual se escribe en vez de perderse. */
+    var regla = SpreadsheetApp.newDataValidation()
+      .requireValueInList(nombres, true).setAllowInvalid(true).build();
+    var desde = L.C.header + 2;
+    L.sheet.getRange(desde, col, L.sheet.getMaxRows() - desde + 1, 1).setDataValidation(regla);
+    return { tablero: t.id, hoja: L.sheet.getName(), opciones: nombres };
+  });
+  Logger.log(JSON.stringify(resumen, null, 2));
+}
+
 function agregarPrioridad() {
   var t = tablero_(NUEVA_PRIORIDAD.tablero);
   var sheet = hojaPorPrefijo_(t.prefijo);
@@ -90,6 +126,18 @@ var ACCESS_TOKEN = "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu";
 
 /* Cuántas prioridades por trimestre admite un tablero. */
 var MAX_PRIORIDADES = 6;
+
+/* La web tiene sus propios nombres de estado y la hoja los suyos. Sin esta
+   traducción el desplegable de ESTADO rechaza el valor y la tarea se guarda
+   sin estado, con el texto cayendo en OBSERVACIONES. */
+var ESTADO_A_SHEET = {
+  "Por hacer": "Pendiente",
+  "En proceso": "En proceso",
+  "Seguimiento": "Seguimiento",
+  "En testeo": "En testeo",
+  "Completado": "Finalizada",
+  "Bloqueado": "Bloqueado"
+};
 
 /* Id del Google Sheet "Evelyna I CONSULTORÍA: Dra. Daniela Gulli". */
 var SHEET_ID = "1fz9FefdaKjy3MRH371d7hjIdxiFryatsAIqwgAaVj4o";
@@ -593,7 +641,9 @@ function writeTaskCells_(L, row, fields) {
     var cell = L.sheet.getRange(row, L.cols[k]);
     var v = fields[k];
     if (v === null || v === "") { try { cell.setValue(""); } catch (err) {} return; }
-    var candidatos = (k === "inicio" || k === "cierre" || k === "finalizado") ? [toSheetDate_(v)] : [v];
+    var candidatos = (k === "inicio" || k === "cierre" || k === "finalizado") ? [toSheetDate_(v)]
+      : k === "estado" ? [ESTADO_A_SHEET[v] || v, v]
+      : [v];
     if (!setSafe_(cell, candidatos)) {
       perdidos.push(k.charAt(0).toUpperCase() + k.slice(1) + ": " + v);
     }
