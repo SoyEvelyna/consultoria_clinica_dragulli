@@ -445,11 +445,17 @@ function aplicarTablero_(){
 /* Los grupos del plan son las prioridades del trimestre (columna PRIORIDAD
    de la hoja). Lo que todavía no tiene prioridad cargada va al final. */
 const SIN_PRIO = 0;
+/* Las prioridades que el tablero realmente tiene definidas en el Sheet.
+   Una tarea vieja marcada P5, cuando el trimestre tiene tres prioridades,
+   no abre un grupo propio: va a "Sin prioridad" para que se corrija. */
+function prioridadesDefinidas(){
+  const ns = (PRIORIDADES||[]).map(p=>Number(p.n)).filter(n=>n>=1 && n<=9);
+  return ns.length ? ns : [1,2,3];
+}
 function prioridadNum(t){
-  /* Vale de P1 a P9: si una tarea vieja quedó con P4 o P5, se respeta
-     en vez de mandarla al grupo "Sin prioridad". */
   const m = String(t.prioridad||"").match(/[1-9]/);
-  return m ? Number(m[0]) : SIN_PRIO;
+  const n = m ? Number(m[0]) : SIN_PRIO;
+  return prioridadesDefinidas().indexOf(n) > -1 ? n : SIN_PRIO;
 }
 function prioridadLabel(n){
   if(n===SIN_PRIO) return "Sin prioridad";
