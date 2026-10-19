@@ -400,7 +400,7 @@ a.deliv-link:hover,a.entregable-link:hover{color:var(--hazard);text-decoration-c
   /* Sello de la versión publicada. GitHub Pages cachea el HTML y el navegador
      se queda con una copia vieja: la página compara este sello contra el del
      servidor y, si quedó atrás, se recarga sola una vez. */
-  window.APP_VERSION = "20261013-1829";
+  window.APP_VERSION = "20261019-1731";
   window.GULLI_GAS_CONFIG = {
     url: "https://script.google.com/macros/s/AKfycby6AGbv4jm4CFW5X0Tgt8w6ygOghZeoV2woaL8rb-tketHRvTeVW9H3DtfMvzsWY8OD/exec",
     token: "FnFqqvwQQLcBSjOjhiCxEJZdmcpJXuGu"
@@ -650,7 +650,13 @@ let TASKS = [];
    el id cambia cuando la tarea pasa a Finalizadas. */
 const RECIENTES_MS = 3 * 60 * 1000;
 const recientes = new Map();
-function claveTarea_(t){ return String(t.tema||"") + "|" + String(t.tarea||""); }
+/* La clave lleva el tablero adelante: Administración, Médicos y Comercial
+   comparten página y hay tareas con el mismo tema y el mismo texto en dos de
+   ellos. Sin el tablero, lo recién editado en uno se le aplicaba al homónimo
+   del otro y el estado se veía cambiado donde no correspondía. */
+function claveTarea_(t){
+  return String(tableroActivo||"") + "|" + String(t.tema||"") + "|" + String(t.tarea||"");
+}
 function recordarCambio_(t, fields){
   const previo = recientes.get(claveTarea_(t));
   recientes.set(claveTarea_(t), {fields: Object.assign({}, previo && previo.fields, fields), ts: Date.now()});
