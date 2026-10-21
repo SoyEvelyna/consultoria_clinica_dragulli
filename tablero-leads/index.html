@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leads Dra. Gulli</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{--font-anthropic-sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--font-anthropic-serif:"Source Serif 4",Georgia,serif;
+--color-bg:#f6f7f9;--color-panel:#ffffff;--color-fg:#1b1f27;--color-fg-muted:#5e6573;--color-border-line:#e2e5ea;--color-ok:#1f7a4d;--color-warn:#b45f06;--color-bad:#c0362c;
+--cds-chart-grid:#eceef2;--cds-chart-axis:#c9ced6;--cds-chart-muted:#c3c8d1;--cds-surface-popover:#ffffff;--cds-border:#dde1e7;--cds-shadow-popover:0 4px 16px rgba(20,24,32,.12);--cds-text-secondary:#5e6573;
+--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:16px;--cds-gap-lg:24px;--cds-gap-xl:32px;--cds-pad-xs:4px;--cds-pad-sm:10px;--cds-pad-md:14px;--cds-pad-lg:20px;--cds-radius:10px;
+--cds-font-size-caption:13px;--cds-font-size-body:15px;--cds-font-size-heading:17px;--cds-font-size-title:32px;--cds-font-weight-medium:600;--cds-dur-slow:.3s;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--color-bg:#121419;--color-panel:#1b1e25;--color-fg:#e8eaee;--color-fg-muted:#9aa1ad;--color-border-line:#2c3039;--color-ok:#4cc38a;--color-warn:#f0a24a;--color-bad:#f07167;
+--cds-chart-grid:#262a32;--cds-chart-axis:#3a3f4a;--cds-chart-muted:#4a505c;--cds-surface-popover:#22262e;--cds-border:#333844;--cds-shadow-popover:0 4px 16px rgba(0,0,0,.45);--cds-text-secondary:#9aa1ad;color-scheme:dark}}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-anthropic-sans);font-size:15px}
+#dash-root{max-width:1200px;margin:0 auto;padding-block:32px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.lg b{font-weight:600}
+.dash-skeleton{color:transparent!important;background:var(--cds-chart-grid);border-radius:6px;display:inline-block;min-width:4ch}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+window.dash=(function(){
+  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-10-18",cuenta:"Todas",via:"Todas"};
+  var files={leads:"data/leads.bin",turnos:"data/turnos.json"};
+  function load(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);
+    if(/\.bin$/.test(u)){return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).json()}return r.json()})}
+  function run(){cbs.forEach(function(f){try{f()}catch(e){console.error(e)}})}
+  Object.keys(files).forEach(function(k){ST[k]="loading";load(files[k]).then(function(d){DS[k]=d;ST[k]="ok";run()}).catch(function(){ST[k]="error";run()})});
+  var t;window.addEventListener("resize",function(){clearTimeout(t);t=setTimeout(run,150)});
+  return{colors:["#2f6fd6","#1f9d66","#c98a12","#8a55c9","#1a93a8","#d0453b","#6b7280","#c94d8e"],
+    data:function(id){return{status:ST[id]||"missing",data:DS[id]||[]}},
+    onData:function(f){cbs.push(f);f()},params:function(){return Object.assign({},P)},
+    setParams:function(o){Object.assign(P,o);run()},resetParams:function(){},calc:function(){},refresh:function(){},setLink:function(){}};
+})();
+</script>
+</head><body><div id="dash-root">
+<style>
+.lg{display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);font-variant-numeric:tabular-nums}
+.lg h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+.lg h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.lg-sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:var(--cds-gap-xs) 0 0}
+.lg-take{font-size:var(--cds-font-size-body);margin:var(--cds-gap-sm) 0 0;max-width:70ch;line-height:1.5}
+.lg .lg-take b{font-weight:600}
+.lg-filters{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);align-items:center}
+.lg-seg{display:flex;flex-wrap:wrap;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);overflow:hidden}
+.lg-seg-label{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-right:var(--cds-gap-xs)}
+.lg-fgroup{display:flex;align-items:center;gap:var(--cds-gap-xs);flex-wrap:wrap}
+.lg-seg button{font:inherit;font-size:var(--cds-font-size-caption);background:var(--color-panel);color:var(--color-fg);border:0;border-right:1px solid var(--color-border-line);padding:var(--cds-pad-xs) var(--cds-pad-sm);cursor:pointer}
+.lg-seg button:last-child{border-right:0}
+.lg-seg button[aria-pressed="true"]{background:var(--color-fg);color:var(--color-bg)}
+.lg-seg button:focus-visible{outline:2px solid var(--color-fg);outline-offset:-2px}
+.lg-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:var(--cds-gap-md)}
+.lg-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0;display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.lg-kpi-l{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.lg-kpi-v{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);line-height:1.1;min-height:1.1em}
+.lg-kpi-s{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);min-height:1.3em}
+.lg-up{color:var(--color-ok)} .lg-down{color:var(--color-bad)} .lg-warn{color:var(--color-warn)}
+.lg-note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:0}
+.lg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--cds-gap-md)}
+.lg-bars{display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.lg-bar{display:grid;grid-template-columns:minmax(7rem,11rem) 1fr auto;gap:var(--cds-gap-sm);align-items:center;font-size:var(--cds-font-size-caption)}
+.lg-track{height:14px;background:var(--cds-chart-grid);border-radius:4px;overflow:hidden}
+.lg-fill{height:100%;border-radius:4px}
+.lg-val{text-align:right;white-space:nowrap}
+.lg-val .lg-pct{color:var(--color-fg-muted);margin-left:var(--cds-gap-xs)}
+.lg-funnel .lg-bar{grid-template-columns:minmax(8rem,12rem) 1fr minmax(6rem,auto)}
+.lg-step-drop{grid-column:2 / 4;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-top:-4px}
+.lg-step-drop.lg-worst{color:var(--color-bad)}
+.lg-chart{position:relative;min-height:340px}
+.lg-chart svg text{fill:var(--color-fg-muted);font-size:11px;font-family:var(--font-anthropic-sans)}
+.lg-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);white-space:nowrap;z-index:2}
+.lg-tip .lg-tip-h{color:var(--cds-text-secondary);margin-bottom:2px}
+.lg-sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.lg-legend{display:flex;gap:var(--cds-gap-md);flex-wrap:wrap;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.lg-tablewrap{overflow:auto;max-height:28rem}
+.lg-table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.lg-table th{position:sticky;top:0;background:var(--color-panel);text-align:right;font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.lg-table th:first-child,.lg-table td:first-child{text-align:left}
+.lg-table th button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.lg-table td{padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);text-align:right;white-space:nowrap}
+.lg-cellbar{display:inline-block;height:8px;border-radius:4px;background:var(--cds-chart-muted);vertical-align:middle;margin-right:6px}
+.lg-fail{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);min-height:6rem}
+.lg-fail::before{content:"";width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+.lg-notes{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:var(--cds-gap-xs);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);max-width:80ch}
+.lg-tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:var(--cds-gap-lg)}
+.lg-tcol{display:flex;flex-direction:column;gap:var(--cds-gap-sm);min-width:0}
+.lg-h3{font-size:var(--cds-font-size-caption);font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);margin:0}
+.lg-tgrid .lg-bar{grid-template-columns:minmax(7rem,12rem) 1fr auto}
+.lg-tmain{grid-column:span 1}
+#tabla-turnos td{text-align:left}
+#tabla-turnos th{text-align:left}
+[data-dash-source-state=empty]{color:transparent}
+[data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+@media (max-width:520px){.lg-bar,.lg-funnel .lg-bar{grid-template-columns:6.5rem 1fr auto}}
+.lg-date{font:inherit;font-size:var(--cds-font-size-caption);background:var(--color-panel);color:var(--color-fg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-xs) var(--cds-pad-sm)}
+.lg-dates{gap:var(--cds-gap-sm)}
+</style>
+
+<div class="lg">
+  <header id="resumen">
+    <h1>Leads Dra. Gulli</h1>
+    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 18 de octubre de 2026 · <span id="lg-range"></span></p>
+    <p class="lg-take" id="lg-take" data-source="leads"><span class="dash-skeleton">—</span></p>
+  </header>
+
+  <div class="lg-filters" id="filtros">
+    <div class="lg-fgroup"><span class="lg-seg-label">Período</span>
+      <div class="lg-seg" role="group" aria-label="Atajos de período" id="presets">
+        <button type="button" data-d="2026-07-07" data-h="2026-10-18">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-18">Octubre</button><button type="button" data-d="2026-09-21" data-h="2026-10-18">Últimas 4 semanas</button><button type="button" data-d="2026-10-12" data-h="2026-10-18">Última semana</button>
+      </div></div>
+    <div class="lg-fgroup lg-dates">
+      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-10-18">
+      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-10-18">
+    </div>
+    <div class="lg-fgroup"><span class="lg-seg-label">Cuenta</span>
+      <div class="lg-seg" role="group" aria-label="Cuenta" data-param="cuenta">
+        <button type="button" data-v="Todas">Todas</button><button type="button" data-v="Dani">Dani</button><button type="button" data-v="Clínica">Clínica</button>
+      </div></div>
+    <div class="lg-fgroup"><span class="lg-seg-label">Vía de entrada</span>
+      <div class="lg-seg" role="group" aria-label="Vía de entrada" data-param="via">
+        <button type="button" data-v="Todas">Todas</button><button type="button" data-v="Pauta">Pauta</button><button type="button" data-v="Instagram DM">Instagram DM</button><button type="button" data-v="WhatsApp">WhatsApp</button><button type="button" data-v="Mail">Mail</button>
+      </div></div>
+  </div>
+
+  <section class="lg-kpis" id="indicadores" data-source="leads">
+    <div class="lg-card"><span class="lg-kpi-l">Consultas recibidas</span><span class="lg-kpi-v dash-skeleton" id="k-consultas">—</span><span class="lg-kpi-s" id="k-consultas-s"></span></div>
+    <div class="lg-card"><span class="lg-kpi-l">Completaron sus datos</span><span class="lg-kpi-v dash-skeleton" id="k-completaron">—</span><span class="lg-kpi-s" id="k-completaron-s"></span></div>
+    <div class="lg-card"><span class="lg-kpi-l">Turnos (Estado = Turno)</span><span class="lg-kpi-v dash-skeleton" id="k-turnos">—</span><span class="lg-kpi-s" id="k-turnos-s"></span></div>
+    <div class="lg-card"><span class="lg-kpi-l">Conversión a turno</span><span class="lg-kpi-v dash-skeleton" id="k-conv">—</span><span class="lg-kpi-s" id="k-conv-s"></span></div>
+    <div class="lg-card"><span class="lg-kpi-l">Pendientes sin cierre</span><span class="lg-kpi-v dash-skeleton" id="k-pend">—</span><span class="lg-kpi-s" id="k-pend-s"></span></div>
+  </section>
+
+  <section class="lg-card" id="turnos">
+    <h2>Turnos del período: de qué son y de dónde vienen</h2>
+    <p class="lg-note">Todas las filas con Estado "Turno" en cualquier hoja, por fecha de entrada del lead. El tratamiento es el que figura en la planilla: en la hoja TURNOS, la columna Servicio_Interes; en PAUTA y ASESORIA, la columna Tratamiento.</p>
+    <div class="lg-tgrid" data-source="turnos">
+      <div class="lg-tcol"><h3 class="lg-h3">De qué tratamiento son</h3><div class="lg-bars" id="t-tratamiento"></div></div>
+      <div class="lg-tcol"><h3 class="lg-h3">Por qué canal llegaron</h3><div class="lg-bars" id="t-canal"></div>
+        <h3 class="lg-h3">Quién los atendió</h3><div class="lg-bars" id="t-responsable"></div></div>
+    </div>
+    <div class="lg-tablewrap">
+      <table class="lg-table" id="tabla-turnos" data-source="turnos" data-row-key="clave">
+        <thead><tr>
+          <th data-field="clave">N.º</th><th data-field="fecha">Fecha</th><th data-field="tratamiento">Tratamiento</th><th data-field="canal">Canal</th><th data-field="origen">Hoja</th><th data-field="responsable">Responsable</th><th data-field="como_nos_conocio">Cómo nos conoció</th>
+        </tr></thead><tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="lg-grid">
+    <section class="lg-card lg-funnel" id="embudo">
+      <h2>Embudo: de la consulta al turno</h2>
+      <p class="lg-note">Cada paso como parte de las consultas del período. Debajo, qué parte del paso anterior sigue; en rojo, la mayor caída.</p>
+      <div class="lg-bars" id="funnel-bars" data-source="leads"></div>
+    </section>
+    <section class="lg-card" id="estados">
+      <h2>Dónde quedó cada lead que completó</h2>
+      <p class="lg-note">Estado cargado en la planilla para quienes completaron sus datos.</p>
+      <div class="lg-bars" id="estado-bars" data-source="leads"></div>
+    </section>
+  </div>
+
+  <section class="lg-card" id="evolucion">
+    <h2>Consultas y turnos por semana</h2>
+    <p class="lg-note">Semanas de lunes a domingo. Resaltadas, las que tocan el período elegido. Arriba consultas (completaron + abandonaron el formulario), abajo turnos.</p>
+    <div class="lg-legend" id="lg-legend"></div>
+    <div class="lg-chart" id="weekly" data-source="leads"></div>
+  </section>
+
+  <section class="lg-card" id="tratamientos">
+    <h2>Qué tratamiento consultan y cuál convierte</h2>
+    <p class="lg-note">Tocá un encabezado para ordenar. "Sin dato" son consultas por Instagram o mail sin tratamiento cargado.</p>
+    <div class="lg-tablewrap" data-source="leads">
+      <table class="lg-table" id="tabla-tratamientos">
+        <thead><tr>
+          <th><button type="button" data-sort="tratamiento">Tratamiento</button></th>
+          <th><button type="button" data-sort="consultas">Consultas</button></th>
+          <th><button type="button" data-sort="pct">Completaron</button></th>
+          <th><button type="button" data-sort="turnos">Turnos</button></th>
+          <th><button type="button" data-sort="precio">Perdidos por precio</button></th>
+        </tr></thead><tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="lg-grid">
+    <section class="lg-card" id="abandono">
+      <h2>Por qué no terminan el formulario</h2>
+      <p class="lg-note">Último dato que el bot no logró pedir, sobre quienes abandonaron.</p>
+      <div class="lg-bars" id="abandono-bars" data-source="leads"></div>
+    </section>
+    <section class="lg-card" id="perdida">
+      <h2>Por qué se pierden después</h2>
+      <p class="lg-note">Motivo anotado en Observaciones, sobre quienes completaron. La mayoría no tiene motivo cargado.</p>
+      <div class="lg-bars" id="perdida-bars" data-source="leads"></div>
+    </section>
+  </div>
+
+  <section class="lg-card" id="formatos">
+    <h2>Pauta: qué formato de anuncio trae leads</h2>
+    <p class="lg-note" id="formatos-note">Solo leads de pauta, según el soporte del anuncio.</p>
+    <div class="lg-tablewrap" data-source="leads">
+      <table class="lg-table" id="tabla-formatos">
+        <thead><tr><th>Formato</th><th>Consultas</th><th>Completaron</th><th>Turnos</th></tr></thead><tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="lg-card" id="notas">
+    <h2>Cómo leer estos números</h2>
+    <ul class="lg-notes" data-source="leads">
+      <li><b>Consulta</b> es cada entrada registrada en las hojas PAUTA, ASESORIA, NO COMPLETARON, TURNOS, MAIL y las dos de IG-Dani. Si una persona escribe dos veces, cuenta dos veces. Personas distintas en el período (por teléfono): <span id="n-personas">—</span>.</li>
+      <li><b>Cuenta Dani</b> reúne PAUTA_DANI y el Instagram de Dani. <b>Clínica</b> reúne PAUTA_CLINICA, los mensajes directos del Instagram de la clínica (MD), WhatsApp y mail.</li>
+      <li><b>Turno</b> es toda fila con "Turno" en la columna Estado, en cualquier hoja. En PAUTA hay un lead de Endolift corporal del 22/09 con "Turno" escrito en la columna de al lado del Estado: se cuenta como turno.</li>
+      <li><b>Pendiente</b> significa que la persona completó sus datos pero el estado nunca se actualizó en la planilla.</li>
+      <li>La comparación es contra el mismo número de días inmediatamente anterior al período elegido.</li>
+      <li>Los reintentos de <b>remarketing a 24 hs</b> se cuentan aparte y no suman consultas: <span id="n-remarketing">—</span> en el período.</li>
+      <li>Las hojas de IG-Dani solo tienen leads cargados del 10 al 14 de septiembre. La hoja MAIL tiene columnas corridas, por eso sus tratamientos figuran como "Sin dato". La hoja CONSOLIDADO no se usó porque tiene errores #REF!.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function () {
+  const D0 = '2026-07-07', D1 = '2026-10-18';
+  const ABANDONO = 'Abandonó el formulario';
+  const ESTADOS = ['Turno', 'Presupuesto enviado', 'Pendiente', 'No escribió al WhatsApp', 'Dejó de contestar', 'Rechazado', 'Sin estado cargado'];
+  const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const nf = new Intl.NumberFormat('es-AR');
+  const pct = (x) => (x == null || !isFinite(x) ? '—' : new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 1 }).format(x));
+  const sgn = (x) => (x > 0 ? '+' : x < 0 ? '−' : '') + new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 0 }).format(Math.abs(x));
+  const day = (s) => new Date(s + 'T00:00:00Z');
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const addDays = (s, n) => iso(new Date(day(s).getTime() + n * 864e5));
+  const fmtD = (s) => { const d = day(s); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
+  const weekOf = (s) => { const d = day(s); return addDays(s, -((d.getUTCDay() + 6) % 7)); };
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const fail = (box) => box.replaceChildren(el('div', 'lg-fail', 'Failed to load'));
+  const params = () => {
+    const p = { desde: D0, hasta: D1, cuenta: 'Todas', via: 'Todas', ...dash.params() };
+    if (!p.desde || p.desde < D0) p.desde = D0;
+    if (!p.hasta || p.hasta > D1) p.hasta = D1;
+    if (p.desde > p.hasta) [p.desde, p.hasta] = [p.hasta, p.desde];
+    return p;
+  };
+  const ratio = (a, b) => (b ? a / b : null);
+
+  // Controles
+  document.querySelectorAll('.lg-seg[data-param]').forEach((g) => g.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-v]'); if (b) dash.setParams({ [g.dataset.param]: b.dataset.v });
+  }));
+  document.getElementById('presets').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-d]'); if (b) dash.setParams({ desde: b.dataset.d, hasta: b.dataset.h });
+  });
+  const fD = document.getElementById('f-desde'), fH = document.getElementById('f-hasta');
+  [[fD, 'desde'], [fH, 'hasta']].forEach(([inp, name]) => {
+    inp.addEventListener('change', () => {
+      if (inp.value && inp.validity.valid && inp.value >= D0 && inp.value <= D1) dash.setParams({ [name]: inp.value });
+    });
+    inp.addEventListener('blur', () => { inp.value = params()[name]; });
+  });
+
+  let sortKey = 'consultas', sortDir = -1;
+  document.querySelectorAll('#tabla-tratamientos th button').forEach((b) => b.addEventListener('click', () => {
+    if (sortKey === b.dataset.sort) sortDir = -sortDir; else { sortKey = b.dataset.sort; sortDir = sortKey === 'tratamiento' ? 1 : -1; }
+    draw();
+  }));
+
+  function count(rows, key) { const m = new Map(); rows.forEach((r) => { const k = r[key]; if (k != null) m.set(k, (m.get(k) || 0) + 1); }); return m; }
+  function kp(L) {
+    const comp = L.filter((r) => r.estado !== ABANDONO);
+    const turnos = L.filter((r) => r.estado === 'Turno').length;
+    return {
+      consultas: L.length, completaron: comp.length, comp,
+      pasaron: comp.filter((r) => r.estado !== 'No escribió al WhatsApp').length,
+      turnos, presupuestos: L.filter((r) => r.estado === 'Presupuesto enviado').length,
+      pendientes: L.filter((r) => r.estado === 'Pendiente').length,
+      personas: new Set(L.map((r) => r.persona)).size,
+    };
+  }
+
+  function bars(box, rows, opts) {
+    box.replaceChildren();
+    const max = d3.max(rows, (r) => r.n) || 1;
+    rows.forEach((r, i) => {
+      const row = el('div', 'lg-bar');
+      row.append(el('span', null, r.label));
+      const tr = el('div', 'lg-track'); const f = el('div', 'lg-fill');
+      f.style.width = (100 * r.n / max) + '%'; f.style.background = opts.color(r, i);
+      tr.append(f); row.append(tr);
+      const v = el('span', 'lg-val'); v.append(el('span', null, nf.format(r.n)));
+      if (r.p != null) v.append(el('span', 'lg-pct', pct(r.p)));
+      row.append(v); box.append(row);
+      if (opts.after) opts.after(row, r, i, box);
+    });
+    if (!rows.length) box.append(el('p', 'lg-note', opts.empty || 'Sin casos en este período.'));
+  }
+  const breakdown = (rows, key, total) => [...count(rows, key)].map(([label, n]) => ({ label, n, p: ratio(n, total) })).sort((a, b) => b.n - a.n);
+
+  function delta(sub, cur, prev, goodUp, prevTxt) {
+    sub.replaceChildren();
+    if (prev == null || !prev) return false;
+    const v = (cur - prev) / prev;
+    sub.append(el('span', v === 0 ? '' : (v > 0) === goodUp ? 'lg-up' : 'lg-down', sgn(v)), document.createTextNode(' vs ' + prevTxt));
+    return true;
+  }
+  const setV = (id, txt) => { const e = document.getElementById(id); e.classList.remove('dash-skeleton'); e.textContent = txt; };
+
+  const tip = el('div', 'lg-tip'); tip.hidden = true;
+  function drawWeekly(rows, p) {
+    const box = document.getElementById('weekly'), legend = document.getElementById('lg-legend');
+    box.replaceChildren(); legend.replaceChildren();
+    [['Completaron', dash.colors[0]], ['Abandonaron el formulario', 'var(--cds-chart-muted)'], ['Turnos', dash.colors[1]]].forEach(([n, c]) => {
+      const s = el('span'); const sw = el('span', 'lg-sw'); sw.style.background = c; s.append(sw, document.createTextNode(n)); legend.append(s);
+    });
+    const weeks = []; for (let w = weekOf(D0); w <= D1; w = addDays(w, 7)) weeks.push(w);
+    const by = new Map(weeks.map((w) => [w, { semana: w, consultas: 0, completaron: 0, abandonaron: 0, turnos: 0 }]));
+    rows.forEach((r) => { const o = by.get(weekOf(r.fecha)); if (!o) return; o.consultas++; if (r.estado === ABANDONO) o.abandonaron++; else o.completaron++; if (r.estado === 'Turno') o.turnos++; });
+    const data = [...by.values()];
+    const W = Math.max(280, box.clientWidth), H1 = 220, H2 = 70, gap = 28, mb = 24, H = H1 + gap + H2 + mb;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Consultas y turnos por semana');
+    const y = d3.scaleLinear([0, d3.max(data, (r) => r.consultas) || 1], [H1, 8]).nice();
+    const ticks = y.ticks(4);
+    const probe = svg.append('text').text(nf.format(d3.max(ticks)));
+    const ml = Math.ceil(probe.node().getComputedTextLength()) + 10; probe.remove();
+    const x = d3.scaleBand(weeks, [ml, W - 4]).paddingInner(0.25).paddingOuter(0.1);
+    const bw = Math.min(32, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+    const g = svg.append('g');
+    ticks.forEach((t) => {
+      g.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', 'var(--cds-chart-grid)');
+      g.append('text').attr('x', ml - 6).attr('y', y(t)).attr('dy', '0.32em').attr('text-anchor', 'end').text(nf.format(t));
+    });
+    const top2 = H1 + gap;
+    const y2 = d3.scaleLinear([0, d3.max(data, (r) => r.turnos) || 1], [top2 + H2, top2 + 12]);
+    g.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', top2 + H2).attr('y2', top2 + H2).attr('stroke', 'var(--cds-chart-axis)');
+    const step = Math.max(1, Math.ceil(weeks.length * 48 / (W - ml)));
+    data.forEach((r, i) => {
+      const on = r.semana <= p.hasta && addDays(r.semana, 6) >= p.desde;
+      const gx = x(r.semana) + off;
+      const wg = g.append('g').attr('opacity', on ? 1 : 0.35);
+      wg.append('rect').attr('x', gx).attr('width', bw).attr('y', y(r.consultas)).attr('height', Math.max(0, y(r.completaron) - y(r.consultas))).attr('fill', 'var(--cds-chart-muted)').attr('rx', 3);
+      wg.append('rect').attr('x', gx).attr('width', bw).attr('y', y(r.completaron)).attr('height', Math.max(0, H1 - y(r.completaron))).attr('fill', dash.colors[0]).attr('rx', 3);
+      wg.append('rect').attr('x', gx).attr('width', bw).attr('y', y2(r.turnos)).attr('height', Math.max(0, top2 + H2 - y2(r.turnos))).attr('fill', dash.colors[1]).attr('rx', 3);
+      if (r.turnos && bw >= 14) wg.append('text').attr('x', gx + bw / 2).attr('y', y2(r.turnos) - 3).attr('text-anchor', 'middle').text(nf.format(r.turnos));
+      if (i % step === 0) g.append('text').attr('x', gx + bw / 2).attr('y', H - 6).attr('text-anchor', 'middle').text(fmtD(r.semana));
+      g.append('rect').attr('x', x(r.semana)).attr('width', x.step()).attr('y', 0).attr('height', H - mb).attr('fill', 'transparent')
+        .on('mousemove', (ev) => {
+          tip.hidden = false;
+          tip.replaceChildren(el('div', 'lg-tip-h', 'Semana del ' + fmtD(r.semana)));
+          [['Consultas', r.consultas, null], ['Completaron', r.completaron, dash.colors[0]], ['Abandonaron', r.abandonaron, 'var(--cds-chart-muted)'], ['Turnos', r.turnos, dash.colors[1]]].forEach(([n, v, c]) => {
+            const line = el('div'); if (c) { const sw = el('span', 'lg-sw'); sw.style.background = c; line.append(sw); }
+            line.append(document.createTextNode(n + ': ' + nf.format(v))); tip.append(line);
+          });
+          const bb = box.getBoundingClientRect();
+          let lx = ev.clientX - bb.left + 12; const tw = tip.offsetWidth;
+          if (lx + tw > bb.width) lx = ev.clientX - bb.left - tw - 12;
+          tip.style.left = Math.max(0, lx) + 'px'; tip.style.top = Math.max(0, ev.clientY - bb.top - 20) + 'px';
+        })
+        .on('mouseleave', () => { tip.hidden = true; });
+    });
+    box.append(tip);
+  }
+
+  function draw() {
+    const p = params();
+    document.querySelectorAll('.lg-seg[data-param]').forEach((g) => g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === p[g.dataset.param]))));
+    document.querySelectorAll('#presets button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.d === p.desde && b.dataset.h === p.hasta)));
+    if (document.activeElement !== fD) fD.value = p.desde;
+    if (document.activeElement !== fH) fH.value = p.hasta;
+    const rango = 'del ' + fmtD(p.desde) + ' al ' + fmtD(p.hasta);
+    document.getElementById('lg-range').textContent = 'mostrando ' + rango;
+    const dias = Math.round((day(p.hasta) - day(p.desde)) / 864e5) + 1;
+    const pH = addDays(p.desde, -1), pD = addDays(p.desde, -dias);
+    const hasPrev = pD >= D0;
+    const prevTxt = 'los ' + dias + ' días anteriores';
+    const match = (r) => (p.cuenta === 'Todas' || r.cuenta === p.cuenta) && (p.via === 'Todas' || r.via === p.via);
+    const inR = (r, a, b) => r.fecha >= a && r.fecha <= b;
+
+    const LD = dash.data('leads');
+    const boxes = ['funnel-bars', 'estado-bars', 'abandono-bars', 'perdida-bars', 'weekly'];
+    if (LD.status !== 'ok') {
+      if (LD.status === 'error') { boxes.forEach((id) => fail(document.getElementById(id))); fail(document.getElementById('lg-take')); }
+      else boxes.forEach((id) => document.getElementById(id).replaceChildren());
+    } else {
+      const base = LD.data.filter((r) => r.tipo === 'lead' && match(r));
+      const L = base.filter((r) => inR(r, p.desde, p.hasta));
+      const k = kp(L);
+      const q = hasPrev ? kp(base.filter((r) => inR(r, pD, pH))) : null;
+      const rmk = LD.data.filter((r) => r.tipo === 'remarketing' && match(r) && inR(r, p.desde, p.hasta)).length;
+
+      setV('k-consultas', nf.format(k.consultas));
+      if (!delta(document.getElementById('k-consultas-s'), k.consultas, q && q.consultas, true, prevTxt)) document.getElementById('k-consultas-s').textContent = rango;
+      setV('k-completaron', nf.format(k.completaron));
+      document.getElementById('k-completaron-s').textContent = pct(ratio(k.completaron, k.consultas)) + ' de las consultas';
+      setV('k-turnos', nf.format(k.turnos));
+      const ts = document.getElementById('k-turnos-s');
+      if (!delta(ts, k.turnos, q && q.turnos, true, prevTxt)) ts.textContent = nf.format(k.presupuestos) + ' presupuestos enviados';
+      setV('k-conv', pct(ratio(k.turnos, k.consultas)));
+      document.getElementById('k-conv-s').textContent = q && q.consultas ? 'antes ' + pct(ratio(q.turnos, q.consultas)) : 'turnos sobre consultas';
+      setV('k-pend', nf.format(k.pendientes));
+      const ps = document.getElementById('k-pend-s'); ps.replaceChildren(el('span', 'lg-warn', pct(ratio(k.pendientes, k.completaron))), document.createTextNode(' de los que completaron'));
+      document.getElementById('n-personas').textContent = nf.format(k.personas);
+      document.getElementById('n-remarketing').textContent = nf.format(rmk);
+
+      const t = document.getElementById('lg-take'); t.replaceChildren();
+      const b = (txt) => el('b', null, txt);
+      t.append(document.createTextNode('Del ' + fmtD(p.desde) + ' al ' + fmtD(p.hasta) + ' entraron '), b(nf.format(k.consultas)), document.createTextNode(' consultas'));
+      if (q && q.consultas) t.append(document.createTextNode(' (' + sgn((k.consultas - q.consultas) / q.consultas) + ' vs ' + prevTxt + ')'));
+      t.append(document.createTextNode(' y hubo '), b(nf.format(k.turnos)), document.createTextNode(' turnos, una conversión de '), b(pct(ratio(k.turnos, k.consultas))), document.createTextNode('. '),
+        b(nf.format(k.pendientes)), document.createTextNode(' leads que dejaron sus datos siguen en Pendiente: es el primer lugar donde recuperar turnos.'));
+
+      // Embudo
+      const pasos = [['Consultas', k.consultas], ['Completaron datos', k.completaron], ['Pasaron al WhatsApp', k.pasaron], ['Turno', k.turnos]];
+      const fr = pasos.map(([label, n], i) => ({ label, n, p: ratio(n, k.consultas), prevStep: i ? ratio(n, pasos[i - 1][1]) : null }));
+      const drops = fr.map((r) => (r.prevStep == null ? -1 : 1 - r.prevStep));
+      const worst = drops.indexOf(Math.max(...drops));
+      bars(document.getElementById('funnel-bars'), k.consultas ? fr : [], {
+        color: (r, i) => (i === fr.length - 1 ? dash.colors[1] : dash.colors[0]),
+        after: (row, r, i, box) => {
+          const n = fr[i + 1]; if (!n || n.prevStep == null) return;
+          const d = el('div', 'lg-bar'); d.append(el('span'));
+          d.append(el('div', 'lg-step-drop' + (i + 1 === worst ? ' lg-worst' : ''), '↓ sigue el ' + pct(n.prevStep)));
+          box.append(d);
+        },
+      });
+
+      // Estados
+      const cE = count(k.comp, 'estado');
+      const col = { 'Turno': dash.colors[1], 'Presupuesto enviado': dash.colors[2], 'Pendiente': 'var(--color-warn)' };
+      bars(document.getElementById('estado-bars'), ESTADOS.filter((e) => cE.get(e)).map((e) => ({ label: e, n: cE.get(e), p: ratio(cE.get(e), k.completaron) })), { color: (r) => col[r.label] || 'var(--cds-chart-muted)' });
+
+      // Motivos
+      const ab = L.filter((r) => r.estado === ABANDONO);
+      bars(document.getElementById('abandono-bars'), breakdown(ab, 'motivo', ab.length), { color: (r, i) => (i === 0 ? dash.colors[0] : 'var(--cds-chart-muted)') });
+      bars(document.getElementById('perdida-bars'), breakdown(k.comp, 'motivo', k.completaron), { color: (r, i) => (i === 0 ? dash.colors[0] : 'var(--cds-chart-muted)') });
+
+      drawWeekly(base, p);
+
+      // Tratamientos
+      const tb = document.querySelector('#tabla-tratamientos tbody'); tb.replaceChildren();
+      const g = d3.group(L, (r) => r.tratamiento);
+      const tr = [...g].map(([tratamiento, rs]) => {
+        const c = rs.filter((r) => r.estado !== ABANDONO).length;
+        return { tratamiento, consultas: rs.length, pct: ratio(c, rs.length), turnos: rs.filter((r) => r.estado === 'Turno').length, precio: rs.filter((r) => r.motivo === 'Precio').length };
+      });
+      tr.sort((a, b) => sortDir * (sortKey === 'tratamiento' ? a.tratamiento.localeCompare(b.tratamiento, 'es') : d3.ascending(a[sortKey] ?? -1, b[sortKey] ?? -1)));
+      const mx = d3.max(tr, (r) => r.consultas) || 1;
+      tr.forEach((r) => {
+        const row = el('tr'); row.append(el('td', null, r.tratamiento));
+        const c = el('td'); const bar = el('span', 'lg-cellbar'); bar.style.width = Math.round(60 * r.consultas / mx) + 'px';
+        c.append(bar, document.createTextNode(nf.format(r.consultas))); row.append(c);
+        row.append(el('td', null, pct(r.pct)), el('td', null, nf.format(r.turnos)), el('td', null, nf.format(r.precio)));
+        tb.append(row);
+      });
+      if (!tr.length) { const row = el('tr'); const td = el('td', 'lg-note', 'Sin consultas en este período.'); td.colSpan = 5; row.append(td); tb.append(row); }
+      document.querySelectorAll('#tabla-tratamientos th').forEach((th) => th.setAttribute('aria-sort', th.querySelector('button').dataset.sort === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'));
+
+      // Formatos
+      const fb = document.querySelector('#tabla-formatos tbody'); fb.replaceChildren();
+      const aplica = p.via === 'Todas' || p.via === 'Pauta';
+      document.getElementById('formatos-note').textContent = aplica ? 'Solo leads de pauta, según el soporte del anuncio.' : 'El formato solo aplica a leads de pauta: elegí la vía Todas o Pauta para verlo.';
+      if (aplica) {
+        [...d3.group(L.filter((r) => r.via === 'Pauta'), (r) => r.formato)].map(([f, rs]) => ({ f, n: rs.length, c: rs.filter((r) => r.estado !== ABANDONO).length, t: rs.filter((r) => r.estado === 'Turno').length }))
+          .sort((a, b) => b.n - a.n).forEach((r) => {
+            const row = el('tr'); row.append(el('td', null, r.f), el('td', null, nf.format(r.n)), el('td', null, pct(ratio(r.c, r.n))), el('td', null, nf.format(r.t))); fb.append(row);
+          });
+      }
+    }
+
+    // Turnos
+    const TL = dash.data('turnos');
+    const tlb = document.querySelector('#tabla-turnos tbody'); tlb.replaceChildren();
+    const tIds = ['t-tratamiento', 't-canal', 't-responsable'];
+    if (TL.status === 'ok') {
+      const rows = TL.data.filter((r) => match(r) && inR(r, p.desde, p.hasta)).sort((a, b) => d3.descending(a.fecha, b.fecha) || d3.descending(a.clave, b.clave));
+      [['tratamiento', 't-tratamiento'], ['canal', 't-canal'], ['responsable', 't-responsable']].forEach(([key, id]) => {
+        bars(document.getElementById(id), breakdown(rows, key, rows.length), { color: (r, i) => (i === 0 ? dash.colors[1] : 'var(--cds-chart-muted)'), empty: 'Sin turnos en este período.' });
+      });
+      rows.forEach((r) => {
+        const row = el('tr'); row.dataset.key = r.clave;
+        [r.clave, fmtD(r.fecha), r.tratamiento, r.canal, r.origen, r.responsable, r.como_nos_conocio].forEach((v) => row.append(el('td', null, v)));
+        tlb.append(row);
+      });
+      if (!rows.length) { const row = el('tr'); const td = el('td', 'lg-note', 'Sin turnos en este período.'); td.colSpan = 7; row.append(td); tlb.append(row); }
+    } else if (TL.status === 'error') tIds.forEach((id) => fail(document.getElementById(id)));
+  }
+
+  dash.onData(draw);
+})();
+</script>
+
+</div></body></html>
