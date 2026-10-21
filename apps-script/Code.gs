@@ -31,38 +31,43 @@ function verTableros() { Logger.log(JSON.stringify(diagnostico_(), null, 2)); }
    desplegable de la columna PRIORIDAD. */
 var NUEVA_PRIORIDAD = { tablero: "admin", texto: "DÍA DE LA MADRE" };
 
-/* Unifica el desplegable de RESPONSABLE de un tablero: toma los nombres que
-   ya ofrece la hoja más todos los que están efectivamente usados en la
-   columna, y aplica esa única lista a toda la columna de tareas. Hace falta
-   porque quedaron filas con reglas más angostas que la realidad: nombres como
-   Ailén o Dani estaban escritos en celdas pero el desplegable los rechazaba,
-   así que al asignarlos desde la web terminaban en OBSERVACIONES. */
-function unificarResponsables() {
+/* Unifica los desplegables de RESPONSABLE y ESTADO de cada tablero: junta lo
+   que ya ofrece la hoja con lo que está efectivamente escrito en la columna y
+   aplica esa única lista a toda la columna. Hace falta porque quedaron filas
+   con reglas más angostas que la realidad —nombres como Ailén o estados que
+   la celda rechazaba— y al guardarlos desde la web terminaban en
+   OBSERVACIONES en vez de en su columna. */
+function unificarDesplegables() {
   var resumen = TABLEROS.map(function (t) {
     var L = procesoLayout_(t.id);
-    if (L.C.responsable === undefined) return { tablero: t.id, error: "sin columna RESPONSABLE" };
-    var col = L.C.responsable + 1;
-    var nombres = [], vistos = {};
-    function sumar(v) {
-      var x = String(v === null || v === undefined ? "" : v).trim();
-      if (!x || vistos[norm_(x)]) return;
-      vistos[norm_(x)] = true;
-      nombres.push(x);
-    }
-    L.tasks.forEach(function (task) {
-      dropdownValues_(L.sheet.getRange(task.row, col)).forEach(sumar);
-      sumar(L.sheet.getRange(task.row, col).getValue());
+    var salida = { tablero: t.id, hoja: L.sheet.getName() };
+    ["responsable", "estado"].forEach(function (campo) {
+      if (L.C[campo] === undefined) { salida[campo] = "sin columna"; return; }
+      var col = L.C[campo] + 1;
+      var valores = [], vistos = {};
+      function sumar(v) {
+        var x = String(v === null || v === undefined ? "" : v).trim();
+        if (!x || vistos[norm_(x)]) return;
+        vistos[norm_(x)] = true;
+        valores.push(x);
+      }
+      L.tasks.forEach(function (task) {
+        dropdownValues_(L.sheet.getRange(task.row, col)).forEach(sumar);
+        sumar(L.sheet.getRange(task.row, col).getValue());
+      });
+      // Los estados que usa la web tienen que estar sí o sí.
+      if (campo === "estado") Object.keys(ESTADO_A_SHEET).forEach(function (k) { sumar(ESTADO_A_SHEET[k]); });
+      if (!valores.length) { salida[campo] = "sin valores"; return; }
+      valores.sort(function (a, b) { return a.localeCompare(b); });
+      /* setAllowInvalid(true): la lista sugiere, no bloquea. Lo que se elija
+         fuera de ella se escribe igual en vez de perderse. */
+      var regla = SpreadsheetApp.newDataValidation()
+        .requireValueInList(valores, true).setAllowInvalid(true).build();
+      var desde = L.C.header + 2;
+      L.sheet.getRange(desde, col, L.sheet.getMaxRows() - desde + 1, 1).setDataValidation(regla);
+      salida[campo] = valores;
     });
-    if (!nombres.length) return { tablero: t.id, error: "no encontré nombres" };
-    ["Anto/Caro", "Caro/Anto"].forEach(sumar);
-    nombres.sort(function (a, b) { return a.localeCompare(b); });
-    /* setAllowInvalid(true): la lista sugiere, no bloquea. Si se elige una
-       combinación que no está, igual se escribe en vez de perderse. */
-    var regla = SpreadsheetApp.newDataValidation()
-      .requireValueInList(nombres, true).setAllowInvalid(true).build();
-    var desde = L.C.header + 2;
-    L.sheet.getRange(desde, col, L.sheet.getMaxRows() - desde + 1, 1).setDataValidation(regla);
-    return { tablero: t.id, hoja: L.sheet.getName(), opciones: nombres };
+    return salida;
   });
   Logger.log(JSON.stringify(resumen, null, 2));
 }
@@ -147,6 +152,7 @@ function ss_() { return SS_ || (SS_ = SpreadsheetApp.openById(SHEET_ID)); }
 var PREFIJO_ETAPA1 = "01";
 var SHEET_OVERRIDES = "WebApp - Overrides";
 var SHEET_NOTES = "WebApp - Notas";
+var SHEET_LOGS = "WebApp - Logs";
 
 /* Los tres tableros del cliente. Las hojas se buscan por su número al
    principio del nombre, así un cambio de título no rompe nada. */
@@ -175,6 +181,7 @@ function hojaPorPrefijo_(prefijo) {
 var SHEET_SCHEMAS = {};
 SHEET_SCHEMAS[SHEET_OVERRIDES] = ["task_id", "estado", "link", "inicio", "cierre", "hidden", "updated_at"];
 SHEET_SCHEMAS[SHEET_NOTES] = ["id", "text", "author", "createdAt"];
+SHEET_SCHEMAS[SHEET_LOGS] = ["id", "ts", "autor", "accion", "tarea", "detalle"];
 
 /* =====================================================================
    ENTRY POINTS
@@ -191,7 +198,8 @@ function doGet(e) {
       ok: true,
       seed: readSeed_(),
       overrides: readOverrides_(),
-      notes: readSimpleRows_(SHEET_NOTES, SHEET_SCHEMAS[SHEET_NOTES])
+      notes: readSimpleRows_(SHEET_NOTES, SHEET_SCHEMAS[SHEET_NOTES]),
+      logs: readLogs_()
     });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err && err.message || err) });
@@ -219,6 +227,7 @@ function handleAction_(action, p) {
     case "addTask": return addTask_(p.tablero, p.fields || {});
     case "deleteTask": return deleteTask_(p.tablero, p.id);
     case "setOverride": return setOverride_(p.taskId, p.patch || {});
+    case "addLog": return addRow_(SHEET_LOGS, SHEET_SCHEMAS[SHEET_LOGS], p);
     case "addNote": return addRow_(SHEET_NOTES, SHEET_SCHEMAS[SHEET_NOTES],
       Object.assign({ id: "n" + Date.now(), createdAt: nowIso_() }, p));
     case "deleteNote": return deleteRow_(SHEET_NOTES, p.id);
@@ -797,6 +806,35 @@ function readOverrides_() {
       updatedAt: r.updated_at || null
     };
   });
+  return out;
+}
+
+/* =====================================================================
+   LOGS · registro de ediciones
+   Cada cambio hecho desde la web agrega una fila. Se leen sólo los últimos
+   movimientos: la hoja crece sin tope y el tablero muestra los días recientes.
+   ===================================================================== */
+var LOGS_MAX = 500;
+
+function readLogs_() {
+  var sheet = ss_().getSheetByName(SHEET_LOGS);
+  if (!sheet) return [];
+  var last = sheet.getLastRow();
+  if (last < 2) return [];
+  var cols = SHEET_SCHEMAS[SHEET_LOGS];
+  var desde = Math.max(2, last - LOGS_MAX + 1);
+  var values = sheet.getRange(desde, 1, last - desde + 1, cols.length).getValues();
+  var out = [];
+  for (var r = 0; r < values.length; r++) {
+    if (!cell_(values[r], 0)) continue;
+    var obj = {};
+    for (var c = 0; c < cols.length; c++) {
+      var v = cell_(values[r], c);
+      if (cols[c] === "ts" && v instanceof Date) v = v.toISOString();
+      obj[cols[c]] = (v === null || v === undefined) ? "" : String(v);
+    }
+    out.push(obj);
+  }
   return out;
 }
 
