@@ -229,6 +229,9 @@ function handleAction_(action, p) {
     case "setOverride": return setOverride_(p.taskId, p.patch || {});
     case "addLog": return addRow_(SHEET_LOGS, SHEET_SCHEMAS[SHEET_LOGS], p);
     case "quitarOpcion": return quitarOpcion_(p.campo, p.valor);
+    case "setObjetivo": return setObjetivo_(p.tablero, p.texto);
+    case "setPrioridad": return setPrioridad_(p.tablero, p.n, p.texto, p.desc);
+    case "agregarPrioridad": return agregarPrioridad_(p.tablero, p.texto, p.desc);
     case "addNote": return addRow_(SHEET_NOTES, SHEET_SCHEMAS[SHEET_NOTES],
       Object.assign({ id: "n" + Date.now(), createdAt: nowIso_() }, p));
     case "deleteNote": return deleteRow_(SHEET_NOTES, p.id);
@@ -443,7 +446,10 @@ function readTablero_(t) {
       if (n === null || !texto2 || texto2.length < 8) continue;
       if (/^KRs|^%|M[ée]tricas/i.test(texto2)) continue; // bloque de métricas: no es prioridad
       if (prioridades.some(function (x) { return Number(x.n) === Number(n); })) continue;
-      prioridades.push({ n: n, tt: texto2, desc: "" });
+      /* Primera línea el título, el resto la descripción: la misma
+         convención que ya usaban los otros tableros. */
+      var lineasPr = String(texto2).split(/\n/);
+      prioridades.push({ n: n, tt: lineasPr[0].trim(), desc: lineasPr.slice(1).join("\n").trim() });
       if (prioridades.length === MAX_PRIORIDADES) break;
     }
     prioridades.sort(function (a, b) { return Number(a.n) - Number(b.n); });
@@ -1094,4 +1100,113 @@ function quitarOpcion_(campo, valor) {
       .requireValueInList(h.lista, true).setAllowInvalid(true).build());
   });
   return { quitado: quitar, campo: buscado, hojas: hojas.map(function (h) { return h.hoja; }) };
+}
+
+/* =====================================================================
+   OBJETIVO Y PRIORIDADES DE CADA TABLERO, EDITABLES DESDE LA WEB
+   Cada tablero es una hoja distinta ("02", "03", "04"), con el bloque arriba:
+   OBJETIVO 1 y su respuesta, y PRIORIDADES con una fila por prioridad. El
+   título y la descripción comparten celda: primera línea el título.
+   ===================================================================== */
+function bloqueTablero_(tableroId) {
+  var t = tablero_(tableroId);
+  var sheet = hojaPorPrefijo_(t.prefijo);
+  var values = sheet.getDataRange().getValues();
+  var C = colsProceso_(values);
+  var objetivoRow = findLabelRow_(values, "OBJETIVO 1");
+  var prioridadesRow = findLabelRow_(values, "PRIORIDADES");
+  var iniciativasRow = findLabelRow_(values, "INICIATIVAS");
+  var fin = iniciativasRow !== -1 ? iniciativasRow : C.header;
+
+  /* Las filas numeradas, con la columna del número y la del texto. */
+  var filas = [];
+  for (var r = (prioridadesRow !== -1 ? prioridadesRow + 1 : 0); r < fin; r++) {
+    var n = null, colN = -1, colTexto = -1;
+    for (var c = 0; c < Math.min(values[r].length, 6); c++) {
+      var val = cell_(values[r], c);
+      if (val === null) continue;
+      var num = typeof val === "number" ? val : Number(String(val).replace(/[.)]/g, "").trim());
+      if (n === null && !isNaN(num) && num >= 1 && num <= 9 && String(val).length <= 3) { n = num; colN = c; continue; }
+      if (n !== null && colTexto === -1) { colTexto = c; break; }
+    }
+    if (n === null || colTexto === -1) continue;
+    var txt = String(cell_(values[r], colTexto) || "");
+    if (txt.length < 8 || /^KRs|^%|M[ée]tricas/i.test(txt)) continue;
+    if (filas.some(function (f) { return f.n === n; })) continue;
+    filas.push({ fila: r, n: n, colN: colN, colTexto: colTexto });
+  }
+  return { sheet: sheet, values: values, C: C, objetivoRow: objetivoRow,
+    prioridadesRow: prioridadesRow, fin: fin, filas: filas };
+}
+
+function setObjetivo_(tableroId, texto) {
+  var B = bloqueTablero_(tableroId);
+  if (B.objetivoRow === -1) throw new Error("No encuentro el bloque OBJETIVO 1 en " + B.sheet.getName());
+  var hasta = B.prioridadesRow !== -1 ? B.prioridadesRow : Math.min(B.objetivoRow + 7, B.values.length);
+  var destino = -1, columna = 2;
+  for (var o = B.objetivoRow + 1; o < hasta; o++) {
+    for (var c = 0; c < Math.min(B.values[o].length, 6); c++) {
+      var v = cell_(B.values[o], c);
+      if (typeof v !== "string" || v.length <= 3) continue;
+      if (v.indexOf("¿") === 0 || /^(OBJETIVO|PRIORIDADES|INICIATIVAS)/i.test(v)) continue;
+      destino = o; columna = c + 1; break;
+    }
+    if (destino !== -1) break;
+  }
+  /* Si todavía no hay objetivo escrito, va debajo de la pregunta. */
+  if (destino === -1) {
+    destino = B.objetivoRow + 2;
+    columna = 2;
+  }
+  B.sheet.getRange(destino + 1, columna).setValue(String(texto === null || texto === undefined ? "" : texto));
+  return { tablero: tableroId, objetivo: texto || "", fila: destino + 1 };
+}
+
+function setPrioridad_(tableroId, n, texto, desc) {
+  var num = Number(n);
+  var B = bloqueTablero_(tableroId);
+  var fila = null;
+  B.filas.forEach(function (f) { if (f.n === num) fila = f; });
+  if (!fila) throw new Error("No encuentro la prioridad " + num + " en " + B.sheet.getName());
+  var lineas = [String(texto === null || texto === undefined ? "" : texto).trim()];
+  var d = (desc === null || desc === undefined) ? "" : String(desc).trim();
+  if (d) lineas = lineas.concat(d.split(/\n/));
+  B.sheet.getRange(fila.fila + 1, fila.colTexto + 1).setValue(lineas.join("\n"));
+  return { tablero: tableroId, n: num, texto: lineas[0], desc: d };
+}
+
+function agregarPrioridad_(tableroId, texto, desc) {
+  var B = bloqueTablero_(tableroId);
+  if (!B.filas.length) throw new Error("No encuentro ninguna prioridad para copiar el formato en " + B.sheet.getName());
+  var ultima = B.filas[0];
+  B.filas.forEach(function (f) { if (f.n > ultima.n) ultima = f; });
+  if (ultima.n >= MAX_PRIORIDADES) {
+    throw new Error("Ya hay " + ultima.n + " prioridades en " + B.sheet.getName() + ", que es el máximo.");
+  }
+  var filaOrigen = ultima.fila + 1, filaNueva = filaOrigen + 1;
+  var ancho = Math.max(B.sheet.getLastColumn(), ultima.colTexto + 1);
+  B.sheet.insertRowAfter(filaOrigen);
+  B.sheet.getRange(filaOrigen, 1, 1, ancho).copyTo(B.sheet.getRange(filaNueva, 1, 1, ancho), { formatOnly: true });
+  /* El texto vive en celdas combinadas: se repite el combinado. */
+  B.sheet.getRange(filaOrigen, 1, 1, ancho).getMergedRanges().forEach(function (m) {
+    if (m.getNumRows() !== 1) return;
+    B.sheet.getRange(filaNueva, m.getColumn(), 1, m.getNumColumns()).merge();
+  });
+
+  var lineas = [String(texto === null || texto === undefined ? "" : texto).trim()];
+  var d = (desc === null || desc === undefined) ? "" : String(desc).trim();
+  if (d) lineas = lineas.concat(d.split(/\n/));
+  B.sheet.getRange(filaNueva, ultima.colN + 1).setValue(ultima.n + 1);
+  B.sheet.getRange(filaNueva, ultima.colTexto + 1).setValue(lineas.join("\n"));
+
+  var etiquetas = [];
+  for (var i = 1; i <= ultima.n + 1; i++) etiquetas.push("P" + i);
+  if (B.C.prioridad !== undefined) {
+    var desde = B.C.header + 3; // el encabezado bajó una fila al insertar
+    var regla = SpreadsheetApp.newDataValidation()
+      .requireValueInList(etiquetas, true).setAllowInvalid(true).build();
+    B.sheet.getRange(desde, B.C.prioridad + 1, Math.max(B.sheet.getMaxRows() - desde + 1, 1), 1)
+      .setDataValidation(regla);
+  }
+  return { tablero: tableroId, n: ultima.n + 1, texto: lineas[0], fila: filaNueva, opciones: etiquetas };
 }
