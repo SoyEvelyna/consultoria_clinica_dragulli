@@ -153,6 +153,7 @@ var PREFIJO_ETAPA1 = "01";
 var SHEET_OVERRIDES = "WebApp - Overrides";
 var SHEET_NOTES = "WebApp - Notas";
 var SHEET_LOGS = "WebApp - Logs";
+var SHEET_AGENDA = "WebApp - Agenda";
 
 /* Los tres tableros del cliente. Las hojas se buscan por su número al
    principio del nombre, así un cambio de título no rompe nada. */
@@ -182,6 +183,7 @@ var SHEET_SCHEMAS = {};
 SHEET_SCHEMAS[SHEET_OVERRIDES] = ["task_id", "estado", "link", "inicio", "cierre", "hidden", "updated_at", "urgencia"];
 SHEET_SCHEMAS[SHEET_NOTES] = ["id", "text", "author", "createdAt"];
 SHEET_SCHEMAS[SHEET_LOGS] = ["id", "ts", "autor", "accion", "tarea", "detalle"];
+SHEET_SCHEMAS[SHEET_AGENDA] = ["id", "fecha", "hora", "tema", "convocados", "link", "creadoPor", "createdAt"];
 
 /* =====================================================================
    ENTRY POINTS
@@ -199,7 +201,8 @@ function doGet(e) {
       seed: readSeed_(),
       overrides: readOverrides_(),
       notes: readSimpleRows_(SHEET_NOTES, SHEET_SCHEMAS[SHEET_NOTES]),
-      logs: readLogs_()
+      logs: readLogs_(),
+      agenda: readAgenda_()
     });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err && err.message || err) });
@@ -228,6 +231,9 @@ function handleAction_(action, p) {
     case "deleteTask": return deleteTask_(p.tablero, p.id);
     case "setOverride": return setOverride_(p.taskId, p.patch || {});
     case "addLog": return addRow_(SHEET_LOGS, SHEET_SCHEMAS[SHEET_LOGS], p);
+    case "addAgenda": return addRow_(SHEET_AGENDA, SHEET_SCHEMAS[SHEET_AGENDA], p);
+    case "updateAgenda": return updateRow_(SHEET_AGENDA, p.id, p.patch || {});
+    case "deleteAgenda": return deleteRow_(SHEET_AGENDA, p.id);
     case "quitarOpcion": return quitarOpcion_(p.campo, p.valor);
     case "setObjetivo": return setObjetivo_(p.tablero, p.texto);
     case "setPrioridad": return setPrioridad_(p.tablero, p.n, p.texto, p.desc);
@@ -839,6 +845,37 @@ function readOverrides_() {
    movimientos: la hoja crece sin tope y el tablero muestra los días recientes.
    ===================================================================== */
 var LOGS_MAX = 500;
+
+/* =====================================================================
+   AGENDA · las reuniones que todavía no pasaron
+   Viven en su propia pestaña de la web. Las que ya se hicieron siguen
+   viniendo de la hoja 01, que es donde las escribe Fathom: así una cosa no
+   pisa la otra y la agenda no ensucia el historial.
+   ===================================================================== */
+function readAgenda_() {
+  var sheet = ss_().getSheetByName(SHEET_AGENDA);
+  if (!sheet) return [];
+  var cols = SHEET_SCHEMAS[SHEET_AGENDA];
+  var values = sheet.getDataRange().getValues();
+  var out = [];
+  for (var r = 1; r < values.length; r++) {
+    if (!cell_(values[r], 0)) continue;
+    var obj = {};
+    for (var c = 0; c < cols.length; c++) {
+      var v = cell_(values[r], c);
+      if (cols[c] === "fecha") v = toIsoDate_(v);
+      else if (cols[c] === "hora" && v instanceof Date) {
+        v = Utilities.formatDate(v, Session.getScriptTimeZone(), "HH:mm");
+      }
+      obj[cols[c]] = (v === null || v === undefined) ? "" : String(v);
+    }
+    out.push(obj);
+  }
+  out.sort(function (a, b) {
+    return String(a.fecha + " " + a.hora).localeCompare(String(b.fecha + " " + b.hora));
+  });
+  return out;
+}
 
 function readLogs_() {
   var sheet = ss_().getSheetByName(SHEET_LOGS);
