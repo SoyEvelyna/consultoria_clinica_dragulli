@@ -247,7 +247,7 @@ window.dash=(function(){
 
   <div class="lg-panel" id="comerciales" role="tabpanel" aria-labelledby="tab-btn-comerciales" hidden>
     <section class="lg-kpis" id="c-indicadores" data-source="leads">
-      <div class="lg-card"><span class="lg-kpi-l">Leads asignados a comerciales</span><span class="lg-kpi-v" id="c-asig">—</span><span class="lg-kpi-s" id="c-asig-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Leads asignados</span><span class="lg-kpi-v" id="c-asig">—</span><span class="lg-kpi-s" id="c-asig-s"></span></div>
       <div class="lg-card"><span class="lg-kpi-l">Asignados a Gaby</span><span class="lg-kpi-v" id="c-gaby">—</span><span class="lg-kpi-s" id="c-gaby-s"></span></div>
       <div class="lg-card"><span class="lg-kpi-l">Asignados a Ailen</span><span class="lg-kpi-v" id="c-ailen">—</span><span class="lg-kpi-s" id="c-ailen-s"></span></div>
       <div class="lg-card"><span class="lg-kpi-l">Turnos dados por comerciales</span><span class="lg-kpi-v" id="c-turnos">—</span><span class="lg-kpi-s" id="c-turnos-s"></span></div>
@@ -255,13 +255,13 @@ window.dash=(function(){
 
     <section class="lg-card" id="c-asignacion">
       <h2>% de asignación</h2>
-      <p class="lg-note">Leads que completaron sus datos en PAUTA y ASESORIA en el período, según la columna Asesora. El % de Gaby y Ailen es sobre los asignados.</p>
+      <p class="lg-note">Reparto de los leads asignados a comerciales en el período, según la columna Asesora.</p>
       <div class="lg-bars" id="c-asig-bars" data-source="leads"></div>
     </section>
 
     <section class="lg-card" id="c-resultado">
       <h2>Qué pasó con los leads de cada comercial</h2>
-      <p class="lg-note">Totales del período elegido. Conversión = turnos sobre leads asignados.</p>
+      <p class="lg-note">Totales del período elegido. Conversión = turnos sobre leads asignados a cada comercial.</p>
       <div class="lg-tablewrap" data-source="leads">
         <table class="lg-table" id="tabla-comerciales">
           <thead><tr><th>Comercial</th><th>Leads asignados</th><th>% de asignación</th><th>Turnos</th><th>Conversión</th><th>Pendientes</th><th>No escribió al WhatsApp</th><th>Rechazados</th></tr></thead><tbody></tbody>
@@ -271,10 +271,10 @@ window.dash=(function(){
 
     <section class="lg-card" id="c-mensual">
       <h2>Mes a mes</h2>
-      <p class="lg-note">Leads asignados y turnos de cada comercial por mes de entrada del lead, dentro del período elegido.</p>
+      <p class="lg-note">Leads asignados y turnos de cada comercial por mes de entrada del lead. Solo meses con leads asignados.</p>
       <div class="lg-tablewrap" data-source="leads">
         <table class="lg-table" id="tabla-comerciales-mes">
-          <thead><tr><th>Mes</th><th>Gaby: asignados</th><th>Gaby: turnos</th><th>Ailen: asignados</th><th>Ailen: turnos</th><th>% Gaby / Ailen</th><th>Sin asignar</th></tr></thead><tbody></tbody>
+          <thead><tr><th>Mes</th><th>Gaby: asignados</th><th>Gaby: turnos</th><th>Ailen: asignados</th><th>Ailen: turnos</th><th>% Gaby / Ailen</th></tr></thead><tbody></tbody>
         </table>
       </div>
     </section>
@@ -282,8 +282,8 @@ window.dash=(function(){
     <section class="lg-card" id="c-notas">
       <h2>Cómo leer esta pestaña</h2>
       <ul class="lg-notes">
-        <li>La planilla tiene comercial cargada desde septiembre (un lead) y de forma regular recién desde octubre. Antes de eso los leads figuran sin asignar.</li>
-        <li>Los turnos de la hoja TURNOS no tienen comercial: están a nombre de las coordinadoras (Anto y Caro), así que no suman acá. Para ver turnos por comercial, la columna Asesora tiene que completarse también en los leads que terminan en turno.</li>
+        <li>Solo cuenta leads con Gaby o Ailen en la columna Asesora (hojas PAUTA y ASESORIA). Hay asignaciones cargadas desde septiembre (un lead) y de forma regular desde octubre.</li>
+        <li>Un turno cuenta para una comercial solo si el lead tiene su nombre en Asesora.</li>
         <li>"gaby" y "Gaby" se cuentan como la misma persona.</li>
       </ul>
     </section>
@@ -636,20 +636,19 @@ window.dash=(function(){
     const G = L.filter((r) => r.asesora === 'Gaby'), A = L.filter((r) => r.asesora === 'Ailen'), S = L.filter((r) => !r.asesora);
     const asig = G.length + A.length;
 
-    setT('c-asig', nf.format(asig)); setT('c-asig-s', pct(ratio(asig, L.length)) + ' de ' + nf.format(L.length) + ' leads de PAUTA y ASESORIA');
+    setT('c-asig', nf.format(asig)); setT('c-asig-s', 'Gaby ' + nf.format(G.length) + ' · Ailen ' + nf.format(A.length));
     setT('c-gaby', pct(ratio(G.length, asig))); setT('c-gaby-s', nf.format(G.length) + ' leads · ' + nf.format(turnos(G)) + ' turnos');
     setT('c-ailen', pct(ratio(A.length, asig))); setT('c-ailen-s', nf.format(A.length) + ' leads · ' + nf.format(turnos(A)) + ' turnos');
-    setT('c-turnos', nf.format(turnos(G) + turnos(A))); setT('c-turnos-s', 'Gaby ' + nf.format(turnos(G)) + ' · Ailen ' + nf.format(turnos(A)));
+    setT('c-turnos', nf.format(turnos(G) + turnos(A))); setT('c-turnos-s', 'Gaby ' + nf.format(turnos(G)) + ' · Ailen ' + nf.format(turnos(A)) + ' · conversión ' + pct(ratio(turnos(G) + turnos(A), asig)));
 
     bars(document.getElementById('c-asig-bars'), [
       { label: 'Gaby', n: G.length, p: ratio(G.length, asig), color: dash.colors[0] },
       { label: 'Ailen', n: A.length, p: ratio(A.length, asig), color: dash.colors[3] },
-      { label: 'Sin asignar', n: S.length, p: ratio(S.length, L.length), pLabel: pct(ratio(S.length, L.length)) + ' del total', color: 'var(--cds-chart-muted)' },
     ]);
 
     const tb = document.querySelector('#tabla-comerciales tbody'); tb.replaceChildren();
-    [['Gaby', G, ratio(G.length, asig)], ['Ailen', A, ratio(A.length, asig)], ['Sin asignar', S, null], ['Total', L, null]].forEach(([name, rs, share], i) => {
-      const tr = el('tr', i === 3 ? 'lg-total' : null);
+    [['Gaby', G, ratio(G.length, asig)], ['Ailen', A, ratio(A.length, asig)], ['Total comerciales', G.concat(A), asig ? 1 : null]].forEach(([name, rs, share], i) => {
+      const tr = el('tr', i === 2 ? 'lg-total' : null);
       [name, nf.format(rs.length), share == null ? '—' : pct(share), nf.format(turnos(rs)), pct(ratio(turnos(rs), rs.length)),
         nf.format(rs.filter((r) => r.estado === 'Pendiente').length), nf.format(rs.filter((r) => r.estado === 'No escribió al WhatsApp').length), nf.format(rs.filter((r) => r.estado === 'Rechazado').length)]
         .forEach((v) => tr.append(el('td', null, v)));
@@ -659,15 +658,16 @@ window.dash=(function(){
     const mb = document.querySelector('#tabla-comerciales-mes tbody'); mb.replaceChildren();
     const months = []; for (let m = p.desde.slice(0, 7); m <= p.hasta.slice(0, 7);) { months.push(m); const [y, mo] = m.split('-').map(Number); m = mo === 12 ? (y + 1) + '-01' : y + '-' + String(mo + 1).padStart(2, '0'); }
     const row = (label, rs, cls) => {
-      const g = rs.filter((r) => r.asesora === 'Gaby'), a = rs.filter((r) => r.asesora === 'Ailen'), s = rs.length - g.length - a.length;
+      const g = rs.filter((r) => r.asesora === 'Gaby'), a = rs.filter((r) => r.asesora === 'Ailen');
+      if (!g.length && !a.length && !cls) return;
       const tr = el('tr', cls);
       [label, nf.format(g.length), nf.format(turnos(g)), nf.format(a.length), nf.format(turnos(a)),
-        g.length + a.length ? pct(ratio(g.length, g.length + a.length)) + ' / ' + pct(ratio(a.length, g.length + a.length)) : '—', nf.format(s)]
+        g.length + a.length ? pct(ratio(g.length, g.length + a.length)) + ' / ' + pct(ratio(a.length, g.length + a.length)) : '—']
         .forEach((v) => tr.append(el('td', null, v)));
       mb.append(tr);
     };
     months.forEach((m) => { const [y, mo] = m.split('-').map(Number); row(MESES[mo - 1] + ' ' + y, L.filter((r) => r.fecha.slice(0, 7) === m)); });
-    row('Total', L, 'lg-total');
+    if (!asig) { const tr = el('tr'); const td = el('td', 'lg-note', 'Sin leads asignados a comerciales en este período.'); td.colSpan = 6; tr.append(td); mb.append(tr); } else row('Total', L, 'lg-total');
   }
   dash.onData(draw);
 })();
