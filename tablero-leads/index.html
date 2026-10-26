@@ -94,6 +94,11 @@ window.dash=(function(){
 @media (max-width:520px){.lg-bar,.lg-funnel .lg-bar{grid-template-columns:6.5rem 1fr auto}}
 .lg-date{font:inherit;font-size:var(--cds-font-size-caption);background:var(--color-panel);color:var(--color-fg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-xs) var(--cds-pad-sm)}
 .lg-dates{gap:var(--cds-gap-sm)}
+.lg-dl{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.lg-btn{font:inherit;font-size:var(--cds-font-size-caption);display:inline-flex;align-items:center;gap:6px;background:var(--color-panel);color:var(--color-fg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-xs) var(--cds-pad-sm);cursor:pointer;text-decoration:none}
+.lg-btn:hover{border-color:var(--color-fg-muted)}
+.lg-btn:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.lg-btn[disabled]{opacity:.6;cursor:progress}
 </style>
 
 <div class="lg">
@@ -102,6 +107,13 @@ window.dash=(function(){
     <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 25 de octubre de 2026 · <span id="lg-range"></span></p>
     <p class="lg-take" id="lg-take" data-source="leads"><span class="dash-skeleton">—</span></p>
   </header>
+
+  <div class="lg-dl" id="descargas">
+    <button type="button" class="lg-btn" id="dl-anon" hidden>⤓ Descargar Excel sin datos personales</button>
+    <a class="lg-btn" id="dl-anon-link" href="descargas/leads_dra_gulli_sin_datos_personales_2026-10-25.xlsx" download hidden>⤓ Descargar Excel sin datos personales</a>
+    <button type="button" class="lg-btn" id="dl-orig" hidden>⤓ Descargar Excel original (con datos de pacientes)</button>
+    <span class="lg-note" id="dl-msg" role="status"></span>
+  </div>
 
   <div class="lg-filters" id="filtros">
     <div class="lg-fgroup"><span class="lg-seg-label">Período</span>
@@ -486,6 +498,34 @@ window.dash=(function(){
   }
 
   dash.onData(draw);
+})();
+</script>
+
+<script>
+(function () {
+  const anon = document.getElementById('dl-anon'), link = document.getElementById('dl-anon-link'), orig = document.getElementById('dl-orig'), msg = document.getElementById('dl-msg');
+  if (!window.claude || !window.claude.use) { link.hidden = false; return; }
+  let dl = null, pending = null;
+  window.claude.use('downloads').then((ns) => { dl = ns; anon.hidden = !dl; orig.hidden = !dl; }).catch(() => {});
+  const ids = { anon: 'excel_anonimo', orig: 'excel_original' };
+  function tryRun() {
+    if (!pending) return;
+    const kind = pending, d = dash.data(ids[kind]);
+    if (d.status === 'loading' || d.status === 'refreshing') return;
+    pending = null; anon.disabled = orig.disabled = false;
+    if (d.status !== 'ok' || !d.data.length) { msg.textContent = 'No se pudo preparar el archivo.'; return; }
+    const row = d.data[0], bin = atob(row.b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    msg.textContent = '';
+    dl.save({ filename: row.archivo, data: bytes }).catch((e) => {
+      if (e && e.code === 'declined') return;
+      msg.textContent = 'La descarga no está disponible en esta vista.';
+    });
+  }
+  function start(kind) { if (!dl) return; pending = kind; anon.disabled = orig.disabled = true; msg.textContent = 'Preparando el archivo…'; tryRun(); }
+  anon.addEventListener('click', () => start('anon'));
+  orig.addEventListener('click', () => start('orig'));
+  dash.onData(tryRun);
 })();
 </script>
 
