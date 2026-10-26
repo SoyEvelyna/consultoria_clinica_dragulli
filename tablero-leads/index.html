@@ -99,6 +99,13 @@ window.dash=(function(){
 .lg-btn:hover{border-color:var(--color-fg-muted)}
 .lg-btn:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
 .lg-btn[disabled]{opacity:.6;cursor:progress}
+.lg-tabs{display:flex;gap:var(--cds-gap-xs);border-bottom:1px solid var(--color-border-line)}
+.lg-tab{font:inherit;font-size:var(--cds-font-size-body);background:none;border:0;border-bottom:2px solid transparent;color:var(--color-fg-muted);padding:var(--cds-pad-sm) var(--cds-pad-md);cursor:pointer;margin-bottom:-1px}
+.lg-tab[aria-selected="true"]{color:var(--color-fg);border-bottom-color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.lg-tab:focus-visible{outline:2px solid var(--color-fg);outline-offset:-2px}
+.lg-panel{display:flex;flex-direction:column;gap:var(--cds-gap-xl)}
+.lg-table td.lg-strong{font-weight:600}
+.lg-table tr.lg-total td{border-top:2px solid var(--color-border-line);font-weight:600}
 </style>
 
 <div class="lg">
@@ -134,6 +141,12 @@ window.dash=(function(){
       </div></div>
   </div>
 
+  <div class="lg-tabs" role="tablist" aria-label="Vistas">
+    <button type="button" class="lg-tab" role="tab" id="tab-btn-resumen" data-tab="resumen" aria-controls="resumen-panel" aria-selected="true">Resumen</button>
+    <button type="button" class="lg-tab" role="tab" id="tab-btn-comerciales" data-tab="comerciales" aria-controls="comerciales" aria-selected="false">Comerciales</button>
+  </div>
+
+  <div class="lg-panel" id="resumen-panel" role="tabpanel" aria-labelledby="tab-btn-resumen">
   <section class="lg-kpis" id="indicadores" data-source="leads">
     <div class="lg-card"><span class="lg-kpi-l">Consultas recibidas</span><span class="lg-kpi-v dash-skeleton" id="k-consultas">—</span><span class="lg-kpi-s" id="k-consultas-s"></span></div>
     <div class="lg-card"><span class="lg-kpi-l">Completaron sus datos</span><span class="lg-kpi-v dash-skeleton" id="k-completaron">—</span><span class="lg-kpi-s" id="k-completaron-s"></span></div>
@@ -230,6 +243,51 @@ window.dash=(function(){
       <li>Las hojas de IG-Dani solo tienen leads cargados del 10 al 14 de septiembre. La hoja MAIL tiene columnas corridas, por eso sus tratamientos figuran como "Sin dato". La hoja CONSOLIDADO no se usó porque tiene errores #REF!.</li>
     </ul>
   </section>
+  </div>
+
+  <div class="lg-panel" id="comerciales" role="tabpanel" aria-labelledby="tab-btn-comerciales" hidden>
+    <section class="lg-kpis" id="c-indicadores" data-source="leads">
+      <div class="lg-card"><span class="lg-kpi-l">Leads asignados a comerciales</span><span class="lg-kpi-v" id="c-asig">—</span><span class="lg-kpi-s" id="c-asig-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Asignados a Gaby</span><span class="lg-kpi-v" id="c-gaby">—</span><span class="lg-kpi-s" id="c-gaby-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Asignados a Ailen</span><span class="lg-kpi-v" id="c-ailen">—</span><span class="lg-kpi-s" id="c-ailen-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Turnos dados por comerciales</span><span class="lg-kpi-v" id="c-turnos">—</span><span class="lg-kpi-s" id="c-turnos-s"></span></div>
+    </section>
+
+    <section class="lg-card" id="c-asignacion">
+      <h2>% de asignación</h2>
+      <p class="lg-note">Leads que completaron sus datos en PAUTA y ASESORIA en el período, según la columna Asesora. El % de Gaby y Ailen es sobre los asignados.</p>
+      <div class="lg-bars" id="c-asig-bars" data-source="leads"></div>
+    </section>
+
+    <section class="lg-card" id="c-resultado">
+      <h2>Qué pasó con los leads de cada comercial</h2>
+      <p class="lg-note">Totales del período elegido. Conversión = turnos sobre leads asignados.</p>
+      <div class="lg-tablewrap" data-source="leads">
+        <table class="lg-table" id="tabla-comerciales">
+          <thead><tr><th>Comercial</th><th>Leads asignados</th><th>% de asignación</th><th>Turnos</th><th>Conversión</th><th>Pendientes</th><th>No escribió al WhatsApp</th><th>Rechazados</th></tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="lg-card" id="c-mensual">
+      <h2>Mes a mes</h2>
+      <p class="lg-note">Leads asignados y turnos de cada comercial por mes de entrada del lead, dentro del período elegido.</p>
+      <div class="lg-tablewrap" data-source="leads">
+        <table class="lg-table" id="tabla-comerciales-mes">
+          <thead><tr><th>Mes</th><th>Gaby: asignados</th><th>Gaby: turnos</th><th>Ailen: asignados</th><th>Ailen: turnos</th><th>% Gaby / Ailen</th><th>Sin asignar</th></tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="lg-card" id="c-notas">
+      <h2>Cómo leer esta pestaña</h2>
+      <ul class="lg-notes">
+        <li>La planilla tiene comercial cargada desde septiembre (un lead) y de forma regular recién desde octubre. Antes de eso los leads figuran sin asignar.</li>
+        <li>Los turnos de la hoja TURNOS no tienen comercial: están a nombre de las coordinadoras (Anto y Caro), así que no suman acá. Para ver turnos por comercial, la columna Asesora tiene que completarse también en los leads que terminan en turno.</li>
+        <li>"gaby" y "Gaby" se cuentan como la misma persona.</li>
+      </ul>
+    </section>
+  </div>
 </div>
 
 <script>
@@ -526,6 +584,92 @@ window.dash=(function(){
   anon.addEventListener('click', () => start('anon'));
   orig.addEventListener('click', () => start('orig'));
   dash.onData(tryRun);
+})();
+</script>
+<script>
+(function () {
+  const D0 = '2026-07-07', D1 = '2026-10-25', ABANDONO = 'Abandonó el formulario';
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const nf = new Intl.NumberFormat('es-AR');
+  const pct = (x) => (x == null || !isFinite(x) ? '—' : new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 1 }).format(x));
+  const ratio = (a, b) => (b ? a / b : null);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const tabs = [...document.querySelectorAll('.lg-tab')];
+  const panels = { resumen: document.getElementById('resumen-panel'), comerciales: document.getElementById('comerciales') };
+  const show = (tab) => {
+    tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    Object.entries(panels).forEach(([k, e]) => { e.hidden = k !== tab; });
+  };
+  tabs.forEach((b) => b.addEventListener('click', () => { show(b.dataset.tab); dash.setParams({ tab: b.dataset.tab }); dash.setLink(b.dataset.tab === 'comerciales' ? 'comerciales' : 'resumen'); }));
+  if (location.hash.slice(1) === 'comerciales') { show('comerciales'); dash.setParams({ tab: 'comerciales' }); }
+
+  const params = () => {
+    const p = { desde: D0, hasta: D1, cuenta: 'Todas', via: 'Todas', tab: 'resumen', ...dash.params() };
+    if (!p.desde || p.desde < D0) p.desde = D0;
+    if (!p.hasta || p.hasta > D1) p.hasta = D1;
+    if (p.desde > p.hasta) [p.desde, p.hasta] = [p.hasta, p.desde];
+    return p;
+  };
+  const turnos = (rs) => rs.filter((r) => r.estado === 'Turno').length;
+  const setT = (id, t) => { document.getElementById(id).textContent = t; };
+
+  function bars(box, rows) {
+    box.replaceChildren();
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    rows.forEach((r) => {
+      const row = el('div', 'lg-bar'); row.append(el('span', null, r.label));
+      const tr = el('div', 'lg-track'); const f = el('div', 'lg-fill'); f.style.width = (100 * r.n / max) + '%'; f.style.background = r.color; tr.append(f); row.append(tr);
+      const v = el('span', 'lg-val'); v.append(el('span', null, nf.format(r.n))); if (r.p != null) v.append(el('span', 'lg-pct', r.pLabel || pct(r.p))); row.append(v);
+      box.append(row);
+    });
+  }
+
+  function draw() {
+    const p = params();
+    const tab = p.tab === 'comerciales' ? 'comerciales' : 'resumen';
+    show(tab);
+    if (tab !== 'comerciales') return;
+    const LD = dash.data('leads');
+    if (LD.status !== 'ok') return;
+    const L = LD.data.filter((r) => r.tipo === 'lead' && (r.hoja === 'Pauta' || r.hoja === 'Asesoría') && r.estado !== ABANDONO
+      && (p.cuenta === 'Todas' || r.cuenta === p.cuenta) && (p.via === 'Todas' || r.via === p.via) && r.fecha >= p.desde && r.fecha <= p.hasta);
+    const G = L.filter((r) => r.asesora === 'Gaby'), A = L.filter((r) => r.asesora === 'Ailen'), S = L.filter((r) => !r.asesora);
+    const asig = G.length + A.length;
+
+    setT('c-asig', nf.format(asig)); setT('c-asig-s', pct(ratio(asig, L.length)) + ' de ' + nf.format(L.length) + ' leads de PAUTA y ASESORIA');
+    setT('c-gaby', pct(ratio(G.length, asig))); setT('c-gaby-s', nf.format(G.length) + ' leads · ' + nf.format(turnos(G)) + ' turnos');
+    setT('c-ailen', pct(ratio(A.length, asig))); setT('c-ailen-s', nf.format(A.length) + ' leads · ' + nf.format(turnos(A)) + ' turnos');
+    setT('c-turnos', nf.format(turnos(G) + turnos(A))); setT('c-turnos-s', 'Gaby ' + nf.format(turnos(G)) + ' · Ailen ' + nf.format(turnos(A)));
+
+    bars(document.getElementById('c-asig-bars'), [
+      { label: 'Gaby', n: G.length, p: ratio(G.length, asig), color: dash.colors[0] },
+      { label: 'Ailen', n: A.length, p: ratio(A.length, asig), color: dash.colors[3] },
+      { label: 'Sin asignar', n: S.length, p: ratio(S.length, L.length), pLabel: pct(ratio(S.length, L.length)) + ' del total', color: 'var(--cds-chart-muted)' },
+    ]);
+
+    const tb = document.querySelector('#tabla-comerciales tbody'); tb.replaceChildren();
+    [['Gaby', G, ratio(G.length, asig)], ['Ailen', A, ratio(A.length, asig)], ['Sin asignar', S, null], ['Total', L, null]].forEach(([name, rs, share], i) => {
+      const tr = el('tr', i === 3 ? 'lg-total' : null);
+      [name, nf.format(rs.length), share == null ? '—' : pct(share), nf.format(turnos(rs)), pct(ratio(turnos(rs), rs.length)),
+        nf.format(rs.filter((r) => r.estado === 'Pendiente').length), nf.format(rs.filter((r) => r.estado === 'No escribió al WhatsApp').length), nf.format(rs.filter((r) => r.estado === 'Rechazado').length)]
+        .forEach((v) => tr.append(el('td', null, v)));
+      tb.append(tr);
+    });
+
+    const mb = document.querySelector('#tabla-comerciales-mes tbody'); mb.replaceChildren();
+    const months = []; for (let m = p.desde.slice(0, 7); m <= p.hasta.slice(0, 7);) { months.push(m); const [y, mo] = m.split('-').map(Number); m = mo === 12 ? (y + 1) + '-01' : y + '-' + String(mo + 1).padStart(2, '0'); }
+    const row = (label, rs, cls) => {
+      const g = rs.filter((r) => r.asesora === 'Gaby'), a = rs.filter((r) => r.asesora === 'Ailen'), s = rs.length - g.length - a.length;
+      const tr = el('tr', cls);
+      [label, nf.format(g.length), nf.format(turnos(g)), nf.format(a.length), nf.format(turnos(a)),
+        g.length + a.length ? pct(ratio(g.length, g.length + a.length)) + ' / ' + pct(ratio(a.length, g.length + a.length)) : '—', nf.format(s)]
+        .forEach((v) => tr.append(el('td', null, v)));
+      mb.append(tr);
+    };
+    months.forEach((m) => { const [y, mo] = m.split('-').map(Number); row(MESES[mo - 1] + ' ' + y, L.filter((r) => r.fecha.slice(0, 7) === m)); });
+    row('Total', L, 'lg-total');
+  }
+  dash.onData(draw);
 })();
 </script>
 
