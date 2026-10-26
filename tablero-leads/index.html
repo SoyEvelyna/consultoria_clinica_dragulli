@@ -20,7 +20,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 window.dash=(function(){
-  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-10-18",cuenta:"Todas",via:"Todas"};
+  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-10-25",cuenta:"Todas",via:"Todas"};
   var files={leads:"data/leads.bin",turnos:"data/turnos.json"};
   function load(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);
     if(/\.bin$/.test(u)){return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).json()}return r.json()})}
@@ -99,18 +99,18 @@ window.dash=(function(){
 <div class="lg">
   <header id="resumen">
     <h1>Leads Dra. Gulli</h1>
-    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 18 de octubre de 2026 · <span id="lg-range"></span></p>
+    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 25 de octubre de 2026 · <span id="lg-range"></span></p>
     <p class="lg-take" id="lg-take" data-source="leads"><span class="dash-skeleton">—</span></p>
   </header>
 
   <div class="lg-filters" id="filtros">
     <div class="lg-fgroup"><span class="lg-seg-label">Período</span>
       <div class="lg-seg" role="group" aria-label="Atajos de período" id="presets">
-        <button type="button" data-d="2026-07-07" data-h="2026-10-18">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-18">Octubre</button><button type="button" data-d="2026-09-21" data-h="2026-10-18">Últimas 4 semanas</button><button type="button" data-d="2026-10-12" data-h="2026-10-18">Última semana</button>
+        <button type="button" data-d="2026-07-07" data-h="2026-10-25">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-25">Octubre</button><button type="button" data-d="2026-09-28" data-h="2026-10-25">Últimas 4 semanas</button><button type="button" data-d="2026-10-19" data-h="2026-10-25">Última semana</button>
       </div></div>
     <div class="lg-fgroup lg-dates">
-      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-10-18">
-      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-10-18">
+      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-10-25">
+      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-10-25">
     </div>
     <div class="lg-fgroup"><span class="lg-seg-label">Cuenta</span>
       <div class="lg-seg" role="group" aria-label="Cuenta" data-param="cuenta">
@@ -222,7 +222,7 @@ window.dash=(function(){
 
 <script>
 (function () {
-  const D0 = '2026-07-07', D1 = '2026-10-18';
+  const D0 = '2026-07-07', D1 = '2026-10-25';
   const ABANDONO = 'Abandonó el formulario';
   const ESTADOS = ['Turno', 'Presupuesto enviado', 'Pendiente', 'No escribió al WhatsApp', 'Dejó de contestar', 'Rechazado', 'Sin estado cargado'];
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
