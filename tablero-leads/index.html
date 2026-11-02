@@ -20,7 +20,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 window.dash=(function(){
-  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-10-25",cuenta:"Todas",via:"Todas"};
+  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-11-01",cuenta:"Todas",via:"Todas"};
   var files={leads:"data/leads.bin",turnos:"data/turnos.json"};
   function load(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);
     if(/\.bin$/.test(u)){return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).json()}return r.json()})}
@@ -112,13 +112,13 @@ window.dash=(function(){
 <div class="lg">
   <header id="resumen">
     <h1>Leads Dra. Gulli</h1>
-    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 25 de octubre de 2026 · <span id="lg-range"></span></p>
+    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 1 de noviembre de 2026 · <span id="lg-range"></span></p>
     <p class="lg-take" id="lg-take" data-source="leads"><span class="dash-skeleton">—</span></p>
   </header>
 
   <div class="lg-dl" id="descargas">
     <button type="button" class="lg-btn" id="dl-anon" hidden>⤓ Descargar Excel sin datos personales</button>
-    <a class="lg-btn" id="dl-anon-link" href="descargas/leads_dra_gulli_sin_datos_personales_2026-10-25.xlsx" download hidden>⤓ Descargar Excel sin datos personales</a>
+    <a class="lg-btn" id="dl-anon-link" href="descargas/leads_dra_gulli_sin_datos_personales_2026-11-01.xlsx" download hidden>⤓ Descargar Excel sin datos personales</a>
     <button type="button" class="lg-btn" id="dl-orig" hidden>⤓ Descargar Excel original (con datos de pacientes)</button>
     <span class="lg-note" id="dl-msg" role="status"></span>
   </div>
@@ -126,11 +126,11 @@ window.dash=(function(){
   <div class="lg-filters" id="filtros">
     <div class="lg-fgroup"><span class="lg-seg-label">Período</span>
       <div class="lg-seg" role="group" aria-label="Atajos de período" id="presets">
-        <button type="button" data-d="2026-07-07" data-h="2026-10-25">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-25">Octubre</button><button type="button" data-d="2026-09-28" data-h="2026-10-25">Últimas 4 semanas</button><button type="button" data-d="2026-10-19" data-h="2026-10-25">Última semana</button>
+        <button type="button" data-d="2026-07-07" data-h="2026-11-01">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-31">Octubre</button><button type="button" data-d="2026-10-05" data-h="2026-11-01">Últimas 4 semanas</button><button type="button" data-d="2026-10-26" data-h="2026-11-01">Última semana</button>
       </div></div>
     <div class="lg-fgroup lg-dates">
-      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-10-25">
-      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-10-25">
+      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-11-01">
+      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-11-01">
     </div>
     <div class="lg-fgroup"><span class="lg-seg-label">Cuenta</span>
       <div class="lg-seg" role="group" aria-label="Cuenta" data-param="cuenta">
@@ -235,7 +235,7 @@ window.dash=(function(){
   <section class="lg-card" id="notas">
     <h2>Cómo leer estos números</h2>
     <ul class="lg-notes" data-source="leads">
-      <li><b>Consulta</b> es cada entrada registrada en las hojas PAUTA, ASESORIA, NO COMPLETARON, TURNOS, MAIL y las dos de IG-Dani. Si una persona escribe dos veces, cuenta dos veces. Personas distintas en el período (por teléfono): <span id="n-personas">—</span>.</li>
+      <li><b>Consulta</b> es cada entrada registrada en las hojas PAUTA, ASESORIA, NO COMPLETARON, TURNOS, DERMATOLOGIA, ESTETICA, MAIL y las dos de IG-Dani. Desde el 27/10 algunos pedidos de turno aparecen a la vez en TURNOS y en DERMATOLOGIA: se cuentan una sola vez. Si una persona escribe dos veces, cuenta dos veces. Personas distintas en el período (por teléfono): <span id="n-personas">—</span>.</li>
       <li><b>Cuenta Dani</b> reúne PAUTA_DANI y el Instagram de Dani. <b>Clínica</b> reúne PAUTA_CLINICA, los mensajes directos del Instagram de la clínica (MD), WhatsApp y mail.</li>
       <li><b>Turno</b> es toda fila con "Turno" en la columna Estado, en cualquier hoja. En PAUTA hay un lead de Endolift corporal del 22/09 con "Turno" escrito en la columna de al lado del Estado: se cuenta como turno.</li>
       <li><b>Pendiente</b> significa que la persona completó sus datos pero el estado nunca se actualizó en la planilla.</li>
@@ -293,7 +293,7 @@ window.dash=(function(){
 
 <script>
 (function () {
-  const D0 = '2026-07-07', D1 = '2026-10-25';
+  const D0 = '2026-07-07', D1 = '2026-11-01';
   const ABANDONO = 'Abandonó el formulario';
   const ESTADOS = ['Turno', 'Presupuesto enviado', 'Pendiente', 'No escribió al WhatsApp', 'Dejó de contestar', 'Rechazado', 'Sin estado cargado'];
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -589,7 +589,7 @@ window.dash=(function(){
 </script>
 <script>
 (function () {
-  const D0 = '2026-07-07', D1 = '2026-10-25', ABANDONO = 'Abandonó el formulario';
+  const D0 = '2026-07-07', D1 = '2026-11-01', ABANDONO = 'Abandonó el formulario';
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const nf = new Intl.NumberFormat('es-AR');
   const pct = (x) => (x == null || !isFinite(x) ? '—' : new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 1 }).format(x));
