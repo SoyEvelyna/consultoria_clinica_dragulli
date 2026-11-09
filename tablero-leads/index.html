@@ -20,7 +20,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 window.dash=(function(){
-  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-11-01",cuenta:"Todas",via:"Todas"};
+  var DS={},ST={},cbs=[],P={desde:"2026-07-07",hasta:"2026-11-08",cuenta:"Todas",via:"Todas"};
   var files={leads:"data/leads.bin",turnos:"data/turnos.json"};
   function load(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);
     if(/\.bin$/.test(u)){return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).json()}return r.json()})}
@@ -112,13 +112,13 @@ window.dash=(function(){
 <div class="lg">
   <header id="resumen">
     <h1>Leads Dra. Gulli</h1>
-    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 1 de noviembre de 2026 · <span id="lg-range"></span></p>
+    <p class="lg-sub">Redes sociales y pauta · datos hasta el domingo 8 de noviembre de 2026 · <span id="lg-range"></span></p>
     <p class="lg-take" id="lg-take" data-source="leads"><span class="dash-skeleton">—</span></p>
   </header>
 
   <div class="lg-dl" id="descargas">
     <button type="button" class="lg-btn" id="dl-anon" hidden>⤓ Descargar Excel sin datos personales</button>
-    <a class="lg-btn" id="dl-anon-link" href="descargas/leads_dra_gulli_sin_datos_personales_2026-11-01.xlsx" download hidden>⤓ Descargar Excel sin datos personales</a>
+    <a class="lg-btn" id="dl-anon-link" href="descargas/leads_dra_gulli_sin_datos_personales_2026-11-08.xlsx" download hidden>⤓ Descargar Excel sin datos personales</a>
     <button type="button" class="lg-btn" id="dl-orig" hidden>⤓ Descargar Excel original (con datos de pacientes)</button>
     <span class="lg-note" id="dl-msg" role="status"></span>
   </div>
@@ -126,11 +126,11 @@ window.dash=(function(){
   <div class="lg-filters" id="filtros">
     <div class="lg-fgroup"><span class="lg-seg-label">Período</span>
       <div class="lg-seg" role="group" aria-label="Atajos de período" id="presets">
-        <button type="button" data-d="2026-07-07" data-h="2026-11-01">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-31">Octubre</button><button type="button" data-d="2026-10-05" data-h="2026-11-01">Últimas 4 semanas</button><button type="button" data-d="2026-10-26" data-h="2026-11-01">Última semana</button>
+        <button type="button" data-d="2026-07-07" data-h="2026-11-08">Todo</button><button type="button" data-d="2026-08-01" data-h="2026-08-31">Agosto</button><button type="button" data-d="2026-09-01" data-h="2026-09-30">Septiembre</button><button type="button" data-d="2026-10-01" data-h="2026-10-31">Octubre</button><button type="button" data-d="2026-11-01" data-h="2026-11-08">Noviembre</button><button type="button" data-d="2026-10-12" data-h="2026-11-08">Últimas 4 semanas</button><button type="button" data-d="2026-11-02" data-h="2026-11-08">Última semana</button>
       </div></div>
     <div class="lg-fgroup lg-dates">
-      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-11-01">
-      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-11-01">
+      <label class="lg-seg-label" for="f-desde">Desde</label><input class="lg-date" id="f-desde" type="date" min="2026-07-07" max="2026-11-08">
+      <label class="lg-seg-label" for="f-hasta">Hasta</label><input class="lg-date" id="f-hasta" type="date" min="2026-07-07" max="2026-11-08">
     </div>
     <div class="lg-fgroup"><span class="lg-seg-label">Cuenta</span>
       <div class="lg-seg" role="group" aria-label="Cuenta" data-param="cuenta">
@@ -145,6 +145,7 @@ window.dash=(function(){
   <div class="lg-tabs" role="tablist" aria-label="Vistas">
     <button type="button" class="lg-tab" role="tab" id="tab-btn-resumen" data-tab="resumen" aria-controls="resumen-panel" aria-selected="true">Resumen</button>
     <button type="button" class="lg-tab" role="tab" id="tab-btn-comerciales" data-tab="comerciales" aria-controls="comerciales" aria-selected="false">Comerciales</button>
+    <button type="button" class="lg-tab" role="tab" id="tab-btn-remarketing" data-tab="remarketing" aria-controls="remarketing" aria-selected="false">Remarketing</button>
   </div>
 
   <div class="lg-panel" id="resumen-panel" role="tabpanel" aria-labelledby="tab-btn-resumen">
@@ -289,11 +290,70 @@ window.dash=(function(){
       </ul>
     </section>
   </div>
+
+  <div class="lg-panel" id="remarketing" role="tabpanel" aria-labelledby="tab-btn-remarketing" hidden>
+    <section class="lg-kpis" id="r-indicadores" data-source="leads">
+      <div class="lg-card"><span class="lg-kpi-l">Mensajes de remarketing</span><span class="lg-kpi-v" id="r-env">—</span><span class="lg-kpi-s" id="r-env-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Personas alcanzadas</span><span class="lg-kpi-v" id="r-per">—</span><span class="lg-kpi-s" id="r-per-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Volvieron y completaron</span><span class="lg-kpi-v" id="r-rec">—</span><span class="lg-kpi-s" id="r-rec-s"></span></div>
+      <div class="lg-card"><span class="lg-kpi-l">Turnos después del mensaje</span><span class="lg-kpi-v" id="r-tur">—</span><span class="lg-kpi-s" id="r-tur-s"></span></div>
+    </section>
+
+    <div class="lg-grid">
+      <section class="lg-card" id="r-respuesta">
+        <h2>Respuesta al mensaje</h2>
+        <p class="lg-note">Estado cargado en las hojas de remarketing para cada mensaje enviado.</p>
+        <div class="lg-bars" id="r-estado-bars" data-source="leads"></div>
+      </section>
+      <section class="lg-card" id="r-motivo">
+        <h2>En qué paso habían abandonado</h2>
+        <p class="lg-note">Dato que faltaba en el formulario cuando se mandó el remarketing.</p>
+        <div class="lg-bars" id="r-motivo-bars" data-source="leads"></div>
+      </section>
+    </div>
+
+    <section class="lg-card" id="r-semanas">
+      <h2>Semana a semana</h2>
+      <p class="lg-note">Mensajes enviados por semana (lunes a domingo) y cuántos volvieron a completar sus datos.</p>
+      <div class="lg-tablewrap" data-source="leads">
+        <table class="lg-table" id="tabla-rmk-semana">
+          <thead><tr><th>Semana</th><th>Mensajes 24 hs</th><th>Mensajes 48 hs</th><th>Volvieron</th><th>% que volvió</th><th>Turnos</th></tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="lg-grid">
+      <section class="lg-card" id="r-tratamientos">
+        <h2>Por tratamiento</h2>
+        <p class="lg-note">Tratamiento que habían consultado en el formulario.</p>
+        <div class="lg-tablewrap" data-source="leads">
+          <table class="lg-table" id="tabla-rmk-trat"><thead><tr><th>Tratamiento</th><th>Mensajes</th><th>Volvieron</th><th>% que volvió</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+      <section class="lg-card" id="r-canales">
+        <h2>Por canal</h2>
+        <p class="lg-note">Por dónde había entrado la consulta original.</p>
+        <div class="lg-tablewrap" data-source="leads">
+          <table class="lg-table" id="tabla-rmk-canal"><thead><tr><th>Canal</th><th>Mensajes</th><th>Volvieron</th><th>% que volvió</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+    </div>
+
+    <section class="lg-card" id="r-notas">
+      <h2>Cómo leer esta pestaña</h2>
+      <ul class="lg-notes">
+        <li><b>Mensaje de remarketing</b> es cada fila de las hojas REMARKETING24, Remarketing24hs y REMARKETING48: un mensaje a alguien que dejó el formulario del bot sin terminar. No suman consultas en el Resumen.</li>
+        <li><b>Volvió y completó</b> significa que esa misma persona (mismo teléfono) aparece después del mensaje en PAUTA, ASESORIA, TURNOS, DERMATOLOGIA o ESTETICA con sus datos completos.</li>
+        <li><b>Turnos después del mensaje</b> son las personas que volvieron y además tienen Estado "Turno".</li>
+        <li>La planilla tiene remarketing a 24 hs desde el 1/10 y a 48 hs desde el 8/11. Los envíos anteriores al 1/10 ya no figuran en la planilla.</li>
+      </ul>
+    </section>
+  </div>
 </div>
 
 <script>
 (function () {
-  const D0 = '2026-07-07', D1 = '2026-11-01';
+  const D0 = '2026-07-07', D1 = '2026-11-08';
   const ABANDONO = 'Abandonó el formulario';
   const ESTADOS = ['Turno', 'Presupuesto enviado', 'Pendiente', 'No escribió al WhatsApp', 'Dejó de contestar', 'Rechazado', 'Sin estado cargado'];
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -589,20 +649,20 @@ window.dash=(function(){
 </script>
 <script>
 (function () {
-  const D0 = '2026-07-07', D1 = '2026-11-01', ABANDONO = 'Abandonó el formulario';
+  const D0 = '2026-07-07', D1 = '2026-11-08', ABANDONO = 'Abandonó el formulario';
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const nf = new Intl.NumberFormat('es-AR');
   const pct = (x) => (x == null || !isFinite(x) ? '—' : new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 1 }).format(x));
   const ratio = (a, b) => (b ? a / b : null);
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const tabs = [...document.querySelectorAll('.lg-tab')];
-  const panels = { resumen: document.getElementById('resumen-panel'), comerciales: document.getElementById('comerciales') };
+  const panels = { resumen: document.getElementById('resumen-panel'), comerciales: document.getElementById('comerciales'), remarketing: document.getElementById('remarketing') };
   const show = (tab) => {
     tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     Object.entries(panels).forEach(([k, e]) => { e.hidden = k !== tab; });
   };
-  tabs.forEach((b) => b.addEventListener('click', () => { show(b.dataset.tab); dash.setParams({ tab: b.dataset.tab }); dash.setLink(b.dataset.tab === 'comerciales' ? 'comerciales' : 'resumen'); }));
-  if (location.hash.slice(1) === 'comerciales') { show('comerciales'); dash.setParams({ tab: 'comerciales' }); }
+  tabs.forEach((b) => b.addEventListener('click', () => { show(b.dataset.tab); dash.setParams({ tab: b.dataset.tab }); dash.setLink(b.dataset.tab === 'resumen' ? 'resumen' : b.dataset.tab); }));
+  { const h = location.hash.slice(1); if (h === 'comerciales' || h === 'remarketing') { show(h); dash.setParams({ tab: h }); } }
 
   const params = () => {
     const p = { desde: D0, hasta: D1, cuenta: 'Todas', via: 'Todas', tab: 'resumen', ...dash.params() };
@@ -627,7 +687,7 @@ window.dash=(function(){
 
   function draw() {
     const p = params();
-    const tab = p.tab === 'comerciales' ? 'comerciales' : 'resumen';
+    const tab = panels[p.tab] ? p.tab : 'resumen';
     show(tab);
     if (tab !== 'comerciales') return;
     const LD = dash.data('leads');
@@ -669,6 +729,79 @@ window.dash=(function(){
     };
     months.forEach((m) => { const [y, mo] = m.split('-').map(Number); row(MESES[mo - 1] + ' ' + y, L.filter((r) => r.fecha.slice(0, 7) === m)); });
     if (!asig) { const tr = el('tr'); const td = el('td', 'lg-note', 'Sin leads asignados a comerciales en este período.'); td.colSpan = 6; tr.append(td); mb.append(tr); } else row('Total', L, 'lg-total');
+  }
+  dash.onData(draw);
+})();
+</script>
+
+<script>
+(function () {
+  const D0 = '2026-07-07', D1 = '2026-11-08';
+  const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const nf = new Intl.NumberFormat('es-AR');
+  const pct = (x) => (x == null || !isFinite(x) ? '—' : new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 1 }).format(x));
+  const ratio = (a, b) => (b ? a / b : null);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const day = (s) => new Date(s + 'T00:00:00Z');
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const weekOf = (s) => { const d = day(s); return iso(new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * 864e5)); };
+  const fmtD = (s) => { const d = day(s); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
+  const ESTADO = { 'No contesto': 'No contestó', 'No escribio': 'No escribió al WhatsApp', 'Pendiente': 'Pendiente', 'Sin estado': 'Sin estado cargado' };
+  const CANAL = (r) => (r.via === 'Pauta' ? 'Pauta ' : r.via === 'Instagram DM' ? 'Instagram ' : r.via + ' ') + r.cuenta;
+  const params = () => {
+    const p = { desde: D0, hasta: D1, cuenta: 'Todas', via: 'Todas', tab: 'resumen', ...dash.params() };
+    if (!p.desde || p.desde < D0) p.desde = D0;
+    if (!p.hasta || p.hasta > D1) p.hasta = D1;
+    if (p.desde > p.hasta) [p.desde, p.hasta] = [p.hasta, p.desde];
+    return p;
+  };
+  const setT = (id, t) => { document.getElementById(id).textContent = t; };
+  function bars(box, rows, color) {
+    box.replaceChildren();
+    const max = Math.max(1, ...rows.map((r) => r.n));
+    rows.forEach((r, i) => {
+      const row = el('div', 'lg-bar'); row.append(el('span', null, r.label));
+      const tr = el('div', 'lg-track'); const f = el('div', 'lg-fill'); f.style.width = (100 * r.n / max) + '%'; f.style.background = color(r, i); tr.append(f); row.append(tr);
+      const v = el('span', 'lg-val'); v.append(el('span', null, nf.format(r.n)), el('span', 'lg-pct', pct(r.p))); row.append(v);
+      box.append(row);
+    });
+    if (!rows.length) box.append(el('p', 'lg-note', 'Sin mensajes en este período.'));
+  }
+  function table(id, rows, cols) {
+    const tb = document.querySelector('#' + id + ' tbody'); tb.replaceChildren();
+    rows.forEach((r) => { const tr = el('tr', r.total ? 'lg-total' : null); cols.forEach((c) => tr.append(el('td', null, c(r)))); tb.append(tr); });
+    if (!rows.length) { const tr = el('tr'); const td = el('td', 'lg-note', 'Sin mensajes en este período.'); td.colSpan = cols.length; tr.append(td); tb.append(tr); }
+  }
+  const group = (rs, key) => [...d3.group(rs, key)].map(([k, g]) => ({ k, n: g.length, rec: g.filter((r) => r.recuperado).length, tur: g.filter((r) => r.turno_post).length, g }));
+
+  function draw() {
+    const p = params();
+    if (p.tab !== 'remarketing') return;
+    const LD = dash.data('leads');
+    if (LD.status !== 'ok') return;
+    const R = LD.data.filter((r) => r.tipo === 'remarketing' && (p.cuenta === 'Todas' || r.cuenta === p.cuenta) && (p.via === 'Todas' || r.via === p.via) && r.fecha >= p.desde && r.fecha <= p.hasta);
+    const n24 = R.filter((r) => r.remarketing === '24hs').length, n48 = R.filter((r) => r.remarketing === '48hs').length;
+    const rec = R.filter((r) => r.recuperado).length, tur = R.filter((r) => r.turno_post).length;
+    const personas = new Set(R.map((r) => r.persona)).size;
+    setT('r-env', nf.format(R.length)); setT('r-env-s', '24 hs: ' + nf.format(n24) + ' · 48 hs: ' + nf.format(n48));
+    setT('r-per', nf.format(personas)); setT('r-per-s', 'algunas recibieron más de un mensaje');
+    setT('r-rec', nf.format(rec)); setT('r-rec-s', pct(ratio(rec, R.length)) + ' de los mensajes');
+    setT('r-tur', nf.format(tur)); setT('r-tur-s', pct(ratio(tur, R.length)) + ' de los mensajes');
+
+    const eOrder = ['No contesto', 'No escribio', 'Pendiente', 'Sin estado'];
+    const cE = d3.rollup(R, (v) => v.length, (r) => r.estado_rmk);
+    bars(document.getElementById('r-estado-bars'), eOrder.filter((e) => cE.get(e)).map((e) => ({ label: ESTADO[e], n: cE.get(e), p: ratio(cE.get(e), R.length) })),
+      (r) => (r.label === 'Pendiente' ? 'var(--color-warn)' : 'var(--cds-chart-muted)'));
+    bars(document.getElementById('r-motivo-bars'), [...d3.rollup(R.filter((r) => r.motivo), (v) => v.length, (r) => r.motivo)].map(([label, n]) => ({ label, n, p: ratio(n, R.length) })).sort((a, b) => b.n - a.n),
+      (r, i) => (i === 0 ? dash.colors[0] : 'var(--cds-chart-muted)'));
+
+    const sem = group(R, (r) => weekOf(r.fecha)).sort((a, b) => d3.ascending(a.k, b.k));
+    table('tabla-rmk-semana', sem.concat(R.length ? [{ k: 'Total', total: true, n: R.length, rec, tur, g: R }] : []), [
+      (r) => (r.total ? 'Total' : 'Semana del ' + fmtD(r.k)), (r) => nf.format(r.g.filter((x) => x.remarketing === '24hs').length), (r) => nf.format(r.g.filter((x) => x.remarketing === '48hs').length),
+      (r) => nf.format(r.rec), (r) => pct(ratio(r.rec, r.n)), (r) => nf.format(r.tur)]);
+    const cols3 = [(r) => r.k, (r) => nf.format(r.n), (r) => nf.format(r.rec), (r) => pct(ratio(r.rec, r.n))];
+    table('tabla-rmk-trat', group(R, (r) => r.tratamiento).sort((a, b) => b.n - a.n), cols3);
+    table('tabla-rmk-canal', group(R, CANAL).sort((a, b) => b.n - a.n), cols3);
   }
   dash.onData(draw);
 })();
